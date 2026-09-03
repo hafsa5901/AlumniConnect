@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* ── Tailwind v4 theme tokens ─────────────────────────────────────────────── */
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Navy palette */
+  --color-navy-50:  #e8ecf4;
+  --color-navy-100: #c5cfdf;
+  --color-navy-200: #9fb0cc;
+  --color-navy-300: #7891b8;
+  --color-navy-400: #5a78a9;
+  --color-navy-500: #3c5f99;
+  --color-navy-600: #2e4e82;
+  --color-navy-700: #1e3a6e;
+  --color-navy-800: #132a5a;
+  --color-navy-900: #0F1E3D;
+  --color-navy-950: #080f1f;
+
+  /* Accent (indigo-ish) */
+  --color-accent-50:  #eef2ff;
+  --color-accent-100: #e0e7ff;
+  --color-accent-200: #c7d2fe;
+  --color-accent-300: #a5b4fc;
+  --color-accent-400: #818cf8;
+  --color-accent-500: #6366f1;
+  --color-accent-600: #4f46e5;
+  --color-accent-700: #4338ca;
+  --color-accent-800: #3730a3;
+  --color-accent-900: #312e81;
+
+  /* Shadows */
+  --shadow-card:       0 2px 12px 0 rgba(15,30,61,0.08);
+  --shadow-card-hover: 0 8px 24px 0 rgba(15,30,61,0.14);
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    color: #1a202c;
+    background: #ffffff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em; }
+  h2 { font-size: 1.875rem; font-weight: 700; letter-spacing: -0.025em; }
+  h3 { font-size: 1.5rem;   font-weight: 600; }
+  h4 { font-size: 1.25rem;  font-weight: 600; }
+  h5 { font-size: 1.125rem; font-weight: 500; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent-500);
+    outline-offset: 2px;
+  }
+}
+
+/* ── Component layer ───────────────────────────────────────────────────────── */
+@layer components {
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 150ms;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-primary  { background: var(--color-navy-900); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--color-navy-800); }
+
+  .btn-accent { background: var(--color-accent-600); color: #fff; }
+  .btn-accent:hover:not(:disabled) { background: var(--color-accent-700); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--color-navy-900);
+    border: 1.5px solid var(--color-navy-900);
+  }
+  .btn-outline:hover:not(:disabled) { background: var(--color-navy-50); }
+
+  .btn-ghost { background: transparent; color: var(--color-navy-700); }
+  .btn-ghost:hover:not(:disabled) { background: var(--color-navy-50); }
+
+  .btn-danger { background: #dc2626; color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
+  .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+  .btn-lg { padding: 0.75rem 1.5rem; font-size: 1rem; }
+
+  /* Cards */
+  .card {
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-card);
+    border: 1px solid #f3f4f6;
+    transition: box-shadow 200ms;
+  }
+  .card-hover:hover { box-shadow: var(--shadow-card-hover); }
+
+  /* Form inputs */
+  .input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    font-size: 0.875rem;
+    color: #111827;
+    background: #fff;
+    transition: border-color 150ms, box-shadow 150ms;
+    outline: none;
+  }
+  .input::placeholder { color: #9ca3af; }
+  .input:focus {
+    border-color: var(--color-accent-500);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+  }
+  .input:disabled { background: #f9fafb; cursor: not-allowed; }
+  .input-error { border-color: #ef4444; }
+  .input-error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+
+  .label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+  .error-text { font-size: 0.75rem; color: #dc2626; margin-top: 0.25rem; }
+  .helper-text { font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .badge-blue   { background: #dbeafe; color: #1e40af; }
+  .badge-green  { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red    { background: #fee2e2; color: #991b1b; }
+  .badge-gray   { background: #f3f4f6; color: #374151; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+  /* Layout helpers */
+  .section { padding: 4rem 1rem; }
+  @media (min-width: 640px) { .section { padding: 4rem 1.5rem; } }
+  @media (min-width: 1024px) { .section { padding: 4rem 2rem; } }
+
+  .container-app { max-width: 80rem; margin-inline: auto; }
+
+  /* Skeleton */
+  .skeleton { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; background: #e5e7eb; border-radius: 0.25rem; }
+
+  /* Nav link */
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4b5563;
+    text-decoration: none;
+    transition: all 150ms;
+  }
+  .nav-link:hover { background: var(--color-navy-50); color: var(--color-navy-900); }
+  .nav-link-active { background: var(--color-navy-900); color: #fff; }
+  .nav-link-active:hover { background: var(--color-navy-800); color: #fff; }
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+@layer utilities {
+  .animate-fade-in  { animation: fadeIn 0.2s ease-out; }
+  .animate-slide-up { animation: slideUp 0.25s ease-out; }
+}
+
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes pulse   { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
