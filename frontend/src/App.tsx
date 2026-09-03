@@ -28,6 +28,11 @@ const ProfileViewPage        = lazy(() => import('./pages/profile/ProfileViewPag
 const ProfileEditPage        = lazy(() => import('./pages/profile/ProfileEditPage'));
 const SettingsPage           = lazy(() => import('./pages/settings/SettingsPage'));
 
+// Phase 4A: Events
+const EventsPage             = lazy(() => import('./pages/events/EventsPage'));
+const EventDetailPage        = lazy(() => import('./pages/events/EventDetailPage'));
+const AdminEventsPage        = lazy(() => import('./pages/admin/AdminEventsPage'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -79,6 +84,24 @@ export default function App() {
               {/* Directory & Profiles */}
               <Route path="/alumni" element={<AlumniDirectoryPage />} />
               <Route path="/alumni/:id" element={<AlumniProfilePage />} />
+
+              {/* Phase 4A: Events */}
+              <Route
+                path="/events"
+                element={
+                  <ProtectedRoute>
+                    <EventsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/events/:id"
+                element={
+                  <ProtectedRoute>
+                    <EventDetailPage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Authenticated Dashboard Root */}
               <Route
@@ -132,6 +155,14 @@ export default function App() {
                 element={
                   <ProtectedRoute roles={['admin']}>
                     <VerificationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/events"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminEventsPage />
                   </ProtectedRoute>
                 }
               />

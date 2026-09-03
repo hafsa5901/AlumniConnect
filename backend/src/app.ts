@@ -10,6 +10,7 @@ import adminRouter from './routes/admin';
 import usersRouter from './routes/users';
 import dashboardRouter from './routes/dashboard';
 import alumniRouter from './routes/alumni';
+import eventsRouter from './routes/events';
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/v1/admin',     adminRouter);
 app.use('/api/v1/users',     usersRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/alumni',    alumniRouter);
+app.use('/api/v1/events',    eventsRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {
