@@ -4,7 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env';
-import { errorHandler } from './middleware/errorHandler';
+import { errorHandler, createError } from './middleware/errorHandler';
 import authRouter from './routes/auth';
 import adminRouter from './routes/admin';
 
@@ -16,7 +16,13 @@ app.use(helmet());
 // ── CORS (explicit allowlist — no wildcard) ───────────────────────────────────
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: (requestOrigin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+      if (!requestOrigin || requestOrigin === env.CLIENT_URL) {
+        return callback(null, true);
+      }
+      return callback(createError('Not allowed by CORS policy.', 403, 'CORS_NOT_ALLOWED'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

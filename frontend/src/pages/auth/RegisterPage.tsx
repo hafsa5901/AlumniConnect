@@ -1,8 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService, RegisterPayload } from '../../services/auth.service';
-import { CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, GraduationCap, Briefcase, Lock, User as UserIcon, Mail } from 'lucide-react';
+import {
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  ArrowLeft,
+  GraduationCap,
+  Briefcase,
+  Lock,
+  User as UserIcon,
+  Mail,
+  ShieldCheck,
+  Building2,
+  Clock,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Button, Input, Select, Textarea, Card, Badge } from '../../components/ui';
 
 const ALLOWED_DOMAINS = ['college.edu', 'university.edu'];
 
@@ -102,9 +116,9 @@ export default function RegisterPage() {
       const errData = err?.response?.data?.error;
       if (errData?.fields) {
         setFieldErrors(errData.fields);
-        setSubmitError('Please fix the errors below.');
+        setSubmitError('Please correct the highlighted fields.');
       } else {
-        setSubmitError(errData?.message || 'Registration failed. Please check your details.');
+        setSubmitError(errData?.message || 'Registration failed. Please review your details.');
       }
     } finally {
       setIsSubmitting(false);
@@ -113,26 +127,44 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
-        <div className="flex justify-center items-center gap-2 mb-4">
-          <div className="w-10 h-10 bg-navy-900 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
-            AC
-          </div>
-          <span className="text-2xl font-black tracking-tight text-navy-900">AlumniConnect</span>
-        </div>
-        <h1 className="text-center text-3xl font-extrabold text-navy-900">
-          Create your network account
-        </h1>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-accent-600 hover:text-accent-500 underline">
-            Sign in
+      <div className="sm:mx-auto sm:w-full sm:max-w-2xl space-y-6">
+        {/* Brand Header */}
+        <div className="text-center space-y-2">
+          <Link to="/" className="inline-flex items-center gap-2.5">
+            <div className="w-10 h-10 bg-navy-900 rounded-xl flex items-center justify-center text-white font-bold shadow-sm">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <circle cx="6" cy="6" r="3" />
+                <circle cx="18" cy="6" r="3" />
+                <circle cx="12" cy="18" r="3" />
+                <line x1="8.5" y1="7.5" x2="15.5" y2="7.5" />
+                <line x1="7.5" y1="8.5" x2="10.5" y2="15.5" />
+                <line x1="16.5" y1="8.5" x2="13.5" y2="15.5" />
+              </svg>
+            </div>
+            <span className="text-2xl font-extrabold tracking-tight text-navy-900">AlumniConnect</span>
           </Link>
-        </p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-navy-900 tracking-tight">
+            Create your network account
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Already registered?{' '}
+            <Link to="/login" className="font-semibold text-blue-600 hover:underline">
+              Sign in to your account
+            </Link>
+          </p>
+        </div>
+
+        {/* Persistent Institutional Policy Banner */}
+        <div className="bg-blue-50/70 border border-blue-200 rounded-card p-3.5 text-xs text-slate-700 flex items-center gap-3">
+          <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+          <span>
+            <strong>Institutional Policy:</strong> Your institutional identity must be verified before you can access AlumniConnect features.
+          </span>
+        </div>
 
         {/* Step Indicator */}
-        <div className="mt-8 flex justify-between items-center relative max-w-lg mx-auto mb-8 px-4">
-          <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 h-0.5 bg-gray-200 -z-0" />
+        <div className="flex justify-between items-center relative max-w-lg mx-auto px-4">
+          <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 h-0.5 bg-slate-200 -z-0" />
           {[
             { num: 1, label: 'Account' },
             { num: 2, label: 'Role & Dept' },
@@ -141,101 +173,90 @@ export default function RegisterPage() {
           ].map((item) => (
             <div key={item.num} className="flex flex-col items-center z-10 bg-slate-50 px-2">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   step > item.num
-                    ? 'bg-emerald-600 text-white'
+                    ? 'bg-green-600 text-white'
                     : step === item.num
-                    ? 'bg-navy-900 text-white ring-4 ring-navy-100'
-                    : 'bg-gray-200 text-gray-500'
+                    ? 'bg-navy-900 text-white ring-4 ring-blue-50'
+                    : 'bg-slate-200 text-slate-500'
                 }`}
               >
                 {step > item.num ? '✓' : item.num}
               </div>
-              <span className="text-xs mt-1 font-medium text-gray-600">{item.label}</span>
+              <span className="text-[11px] mt-1 font-semibold text-slate-500">{item.label}</span>
             </div>
           ))}
         </div>
-      </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
-        <div className="card p-8 shadow-card border border-gray-200">
+        {/* Main Form Card */}
+        <Card className="p-8 shadow-card border border-slate-200">
           {submitError && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
-              <div>{submitError}</div>
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-900 rounded-lg p-3.5 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <span>{submitError}</span>
             </div>
           )}
 
           {/* STEP 1: Basic Information */}
           {step === 1 && (
             <div className="space-y-5 animate-fade-in">
-              <h2 className="text-lg font-bold text-navy-900 border-b pb-2">Step 1: Basic Information</h2>
-              <div>
-                <label className="label" htmlFor="name">Full Name</label>
-                <div className="relative">
-                  <UserIcon className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
-                  <input
-                    id="name"
-                    type="text"
-                    className={`input pl-10 ${fieldErrors.name ? 'input-error' : ''}`}
-                    placeholder="e.g. Sarah Jenkins"
-                    value={formData.name}
-                    onChange={(e) => updateField('name', e.target.value)}
-                  />
-                </div>
-                {fieldErrors.name && <p className="error-text">{fieldErrors.name}</p>}
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-base font-bold text-navy-900">Step 1: Account Information</h2>
+                <p className="text-xs text-slate-500">Provide your personal identification and secure credentials.</p>
               </div>
 
               <div>
-                <label className="label" htmlFor="email">Email Address</label>
-                <div className="relative">
-                  <Mail className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
-                  <input
-                    id="email"
-                    type="email"
-                    className={`input pl-10 ${fieldErrors.email ? 'input-error' : ''}`}
-                    placeholder="sjenkins@college.edu or name@gmail.com"
-                    value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                  />
-                </div>
-                {fieldErrors.email && <p className="error-text">{fieldErrors.email}</p>}
-                <p className="helper-text">
-                  Institutional emails (@college.edu, @university.edu) receive prioritized verification.
-                </p>
+                <Input
+                  id="name"
+                  type="text"
+                  label="Full Name"
+                  placeholder="e.g. Sarah Jenkins"
+                  leftIcon={<UserIcon className="w-4 h-4" />}
+                  value={formData.name}
+                  error={fieldErrors.name}
+                  onChange={(e) => updateField('name', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Input
+                  id="email"
+                  type="email"
+                  label="Email Address"
+                  placeholder="sjenkins@college.edu or personal@gmail.com"
+                  leftIcon={<Mail className="w-4 h-4" />}
+                  value={formData.email}
+                  error={fieldErrors.email}
+                  helperText="Institutional emails (@college.edu, @university.edu) receive instant domain verification."
+                  onChange={(e) => updateField('email', e.target.value)}
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="label" htmlFor="password">Password</label>
-                  <div className="relative">
-                    <Lock className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
-                    <input
-                      id="password"
-                      type="password"
-                      className={`input pl-10 ${fieldErrors.password ? 'input-error' : ''}`}
-                      placeholder="Min 10 chars, letter + number"
-                      value={formData.password}
-                      onChange={(e) => updateField('password', e.target.value)}
-                    />
-                  </div>
-                  {fieldErrors.password && <p className="error-text">{fieldErrors.password}</p>}
-                </div>
-                <div>
-                  <label className="label" htmlFor="confirmPassword">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
-                    <input
-                      id="confirmPassword"
-                      type="password"
-                      className={`input pl-10 ${fieldErrors.confirmPassword ? 'input-error' : ''}`}
-                      placeholder="Repeat password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => updateField('confirmPassword', e.target.value)}
-                    />
-                  </div>
-                  {fieldErrors.confirmPassword && <p className="error-text">{fieldErrors.confirmPassword}</p>}
-                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  label="Password"
+                  placeholder="Min 10 chars (letters + numbers)"
+                  leftIcon={<Lock className="w-4 h-4" />}
+                  value={formData.password}
+                  error={fieldErrors.password}
+                  onChange={(e) => updateField('password', e.target.value)}
+                  required
+                />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  label="Confirm Password"
+                  placeholder="Repeat password"
+                  leftIcon={<Lock className="w-4 h-4" />}
+                  value={formData.confirmPassword}
+                  error={fieldErrors.confirmPassword}
+                  onChange={(e) => updateField('confirmPassword', e.target.value)}
+                  required
+                />
               </div>
             </div>
           )}
@@ -243,80 +264,78 @@ export default function RegisterPage() {
           {/* STEP 2: Role & Academic Information */}
           {step === 2 && (
             <div className="space-y-6 animate-fade-in">
-              <h2 className="text-lg font-bold text-navy-900 border-b pb-2">Step 2: Role & Department</h2>
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-base font-bold text-navy-900">Step 2: Role & Academic Information</h2>
+                <p className="text-xs text-slate-500">Select your status and campus department details.</p>
+              </div>
 
               <div>
-                <label className="label mb-2">Select Your Role</label>
+                <label className="label mb-2">Select Your Role <span className="text-red-600">*</span></label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
                     onClick={() => updateField('role', 'student')}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                       formData.role === 'student'
-                        ? 'border-navy-900 bg-navy-50/50 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-navy-900 bg-blue-50/40 shadow-xs'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
                     }`}
                   >
-                    <GraduationCap className={`w-7 h-7 mb-2 ${formData.role === 'student' ? 'text-navy-900' : 'text-gray-500'}`} />
-                    <div className="font-bold text-navy-900">Current Student</div>
-                    <div className="text-xs text-gray-500 mt-1">Requires institutional email domain</div>
+                    <GraduationCap className={`w-6 h-6 mb-2 ${formData.role === 'student' ? 'text-navy-900' : 'text-slate-400'}`} />
+                    <div className="font-bold text-xs text-navy-900">Current Student</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Requires institutional email domain</div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => updateField('role', 'alumni')}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                       formData.role === 'alumni'
-                        ? 'border-navy-900 bg-navy-50/50 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-navy-900 bg-blue-50/40 shadow-xs'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
                     }`}
                   >
-                    <Briefcase className={`w-7 h-7 mb-2 ${formData.role === 'alumni' ? 'text-navy-900' : 'text-gray-500'}`} />
-                    <div className="font-bold text-navy-900">Alumni Graduate</div>
-                    <div className="text-xs text-gray-500 mt-1">Institutional or personal email + review</div>
+                    <Briefcase className={`w-6 h-6 mb-2 ${formData.role === 'alumni' ? 'text-navy-900' : 'text-slate-400'}`} />
+                    <div className="font-bold text-xs text-navy-900">Alumni Graduate</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Institutional or personal email + review</div>
                   </button>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="label" htmlFor="department">Department / Major</label>
-                  <select
-                    id="department"
-                    className="input"
-                    value={formData.department}
-                    onChange={(e) => updateField('department', e.target.value)}
-                  >
-                    <option value="Computer Science">Computer Science & Engineering</option>
-                    <option value="Information Technology">Information Technology</option>
-                    <option value="Electrical Engineering">Electrical Engineering</option>
-                    <option value="Mechanical Engineering">Mechanical Engineering</option>
-                    <option value="Business Administration">Business Administration</option>
-                    <option value="Biotechnology">Biotechnology</option>
-                  </select>
-                </div>
+                <Select
+                  id="department"
+                  label="Department / Major"
+                  value={formData.department}
+                  onChange={(e) => updateField('department', e.target.value)}
+                  options={[
+                    { value: 'Computer Science', label: 'Computer Science & Engineering' },
+                    { value: 'Information Technology', label: 'Information Technology' },
+                    { value: 'Electrical Engineering', label: 'Electrical Engineering' },
+                    { value: 'Mechanical Engineering', label: 'Mechanical Engineering' },
+                    { value: 'Business Administration', label: 'Business Administration' },
+                    { value: 'Biotechnology', label: 'Biotechnology' },
+                  ]}
+                  required
+                />
 
-                <div>
-                  <label className="label" htmlFor="batch">Batch / Year</label>
-                  <input
-                    id="batch"
-                    type="text"
-                    className="input"
-                    placeholder="e.g. 2025"
-                    value={formData.batch}
-                    onChange={(e) => updateField('batch', e.target.value)}
-                  />
-                </div>
+                <Input
+                  id="batch"
+                  type="text"
+                  label="Batch / Year"
+                  placeholder="e.g. 2025"
+                  value={formData.batch}
+                  error={fieldErrors.batch}
+                  onChange={(e) => updateField('batch', e.target.value)}
+                  required
+                />
               </div>
 
               <div>
-                <label className="label" htmlFor="idNumber">
-                  {formData.role === 'student' ? 'Student Registration / ID Number' : 'Alumni ID (if known)'}
-                </label>
-                <input
+                <Input
                   id="idNumber"
                   type="text"
-                  className="input"
+                  label={formData.role === 'student' ? 'Student Registration / ID Number' : 'Alumni ID (if known)'}
                   placeholder="e.g. STU-94821"
                   value={formData.role === 'student' ? formData.studentId : formData.alumniId}
                   onChange={(e) =>
@@ -327,181 +346,161 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* STEP 3: Verification & Proof Details */}
+          {/* STEP 3: Verification & Institution Details */}
           {step === 3 && (
             <div className="space-y-5 animate-fade-in">
-              <h2 className="text-lg font-bold text-navy-900 border-b pb-2">Step 3: Verification Details</h2>
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-base font-bold text-navy-900">Step 3: Verification Details</h2>
+                <p className="text-xs text-slate-500">Validation feedback based on your submitted domain.</p>
+              </div>
 
               {formData.role === 'student' ? (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 text-blue-900">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-bold text-sm">Institutional Student Verification</h3>
-                      <p className="text-xs text-blue-700 mt-1 leading-relaxed">
-                        Your email <span className="font-mono font-semibold">{formData.email}</span> matches our institution list.
-                        A verification link will be sent to confirm mailbox ownership.
-                      </p>
-                    </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-slate-900 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-bold text-blue-600">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Institutional Domain Confirmed: {emailDomain}</span>
                   </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    A confirmation link will be sent to <span className="font-mono text-navy-900 font-semibold">{formData.email}</span> to activate your student network access.
+                  </p>
                 </div>
               ) : isInstitutional ? (
-                <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 text-purple-900">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-bold text-sm">Institutional Alumni Verification</h3>
-                      <p className="text-xs text-purple-700 mt-1 leading-relaxed">
-                        You registered with an official institutional domain. Your email will be verified first,
-                        followed by a standard administrative verification to activate directory and mentorship privileges.
-                      </p>
-                    </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-slate-900 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-bold text-blue-600">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Institutional Email Confirmed: {emailDomain}</span>
                   </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Your email ownership will be confirmed first, followed by administrative approval to unlock alumni mentoring and job posting privileges.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-900">
-                    <h3 className="font-bold text-sm flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-600" />
-                      Non-Institutional Email Verification
-                    </h3>
-                    <p className="text-xs text-amber-700 mt-1">
-                      Because you are using a personal email (<span className="font-mono">{formData.email}</span>),
-                      please provide your degree details for manual administrator review.
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-slate-900 space-y-1">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-700">
+                      <Clock className="w-4 h-4" />
+                      <span>Application Received — Pending Institution Review</span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Because you registered with a personal email (<span className="font-mono text-navy-900 font-semibold">{formData.email}</span>), please provide your graduation degree details for administrator verification.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="label" htmlFor="graduationYear">Graduation Year</label>
-                      <input
-                        id="graduationYear"
-                        type="text"
-                        className="input"
-                        placeholder="e.g. 2021"
-                        value={formData.graduationYear}
-                        onChange={(e) => updateField('graduationYear', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="label" htmlFor="degree">Degree Obtained</label>
-                      <input
-                        id="degree"
-                        type="text"
-                        className="input"
-                        placeholder="e.g. B.Tech Computer Science"
-                        value={formData.degree}
-                        onChange={(e) => updateField('degree', e.target.value)}
-                      />
-                    </div>
+                    <Input
+                      id="graduationYear"
+                      type="text"
+                      label="Graduation Year"
+                      placeholder="e.g. 2021"
+                      value={formData.graduationYear}
+                      onChange={(e) => updateField('graduationYear', e.target.value)}
+                    />
+                    <Input
+                      id="degree"
+                      type="text"
+                      label="Degree Conferred"
+                      placeholder="e.g. B.Tech Computer Science"
+                      value={formData.degree}
+                      onChange={(e) => updateField('degree', e.target.value)}
+                    />
                   </div>
 
                   <div>
-                    <label className="label" htmlFor="proofNote">
-                      Additional Notes / Proof Information for Admin
-                    </label>
-                    <textarea
+                    <Textarea
                       id="proofNote"
-                      rows={3}
-                      className="input"
-                      placeholder="Mention your student registration number, advisor name, or LinkedIn profile link to assist verification..."
+                      label="Additional Proof Notes for Registrar"
+                      placeholder="Include your advisor name, roll number, or LinkedIn profile URL to expedite verification..."
                       value={formData.proofNote}
                       onChange={(e) => updateField('proofNote', e.target.value)}
+                      rows={3}
                     />
                   </div>
                 </div>
               )}
-
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-600">
-                🔒 <strong>Security Policy:</strong> Your account must be verified before accessing protected AlumniConnect features.
-                Admin accounts cannot be registered publicly.
-              </div>
             </div>
           )}
 
           {/* STEP 4: Review & Submit */}
           {step === 4 && (
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="text-lg font-bold text-navy-900 border-b pb-2">Step 4: Review & Submit</h2>
+            <div className="space-y-5 animate-fade-in">
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-base font-bold text-navy-900">Step 4: Review & Submit</h2>
+                <p className="text-xs text-slate-500">Confirm your application details before submitting.</p>
+              </div>
 
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-3 text-sm">
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-500">Name</span>
+              <div className="bg-slate-50 rounded-card p-4 border border-slate-200 space-y-2.5 text-xs">
+                <div className="flex justify-between border-b border-slate-200 pb-2">
+                  <span className="text-slate-500">Full Name</span>
                   <span className="font-semibold text-navy-900">{formData.name}</span>
                 </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-500">Email</span>
-                  <span className="font-mono text-navy-900">{formData.email}</span>
+                <div className="flex justify-between border-b border-slate-200 pb-2">
+                  <span className="text-slate-500">Email</span>
+                  <span className="font-mono text-navy-900 font-medium">{formData.email}</span>
                 </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-500">Role</span>
-                  <span className="badge-blue capitalize font-bold">{formData.role}</span>
+                <div className="flex justify-between border-b border-slate-200 pb-2">
+                  <span className="text-slate-500">Requested Role</span>
+                  <Badge variant={formData.role === 'alumni' ? 'blue' : 'green'} size="sm">
+                    {formData.role}
+                  </Badge>
                 </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-500">Department</span>
+                <div className="flex justify-between border-b border-slate-200 pb-2">
+                  <span className="text-slate-500">Department</span>
                   <span className="font-medium text-navy-900">{formData.department}</span>
                 </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-500">Batch</span>
+                <div className="flex justify-between border-b border-slate-200 pb-2">
+                  <span className="text-slate-500">Batch Year</span>
                   <span className="font-medium text-navy-900">{formData.batch}</span>
                 </div>
                 {formData.role === 'alumni' && !isInstitutional && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Review Track</span>
-                    <span className="badge-yellow">Manual Admin Review</span>
+                    <span className="text-slate-500">Verification Track</span>
+                    <Badge variant="yellow" size="sm">Manual Registrar Review</Badge>
                   </div>
                 )}
               </div>
 
-              <p className="text-xs text-gray-500 text-center">
-                By submitting, you agree to our Terms of Service and Code of Conduct.
+              <p className="text-[11px] text-slate-500 text-center">
+                By completing registration, you confirm the accuracy of your academic credentials.
               </p>
             </div>
           )}
 
-          {/* Step Actions */}
-          <div className="mt-8 pt-4 border-t flex justify-between items-center">
+          {/* Navigation Controls */}
+          <div className="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center">
             {step > 1 ? (
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="md"
                 onClick={handleBack}
-                className="btn btn-outline"
                 disabled={isSubmitting}
+                leftIcon={<ArrowLeft className="w-4 h-4" />}
               >
-                <ArrowLeft className="w-4 h-4 mr-1" />
                 Back
-              </button>
+              </Button>
             ) : <div />}
 
             {step < 4 ? (
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="md"
                 onClick={handleNext}
-                className="btn btn-primary"
+                rightIcon={<ArrowRight className="w-4 h-4" />}
               >
                 Next Step
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
+                variant="accent"
+                size="md"
                 onClick={handleSubmit}
-                id="submit-register-btn"
-                className="btn btn-accent px-6 py-2.5"
-                disabled={isSubmitting}
+                isLoading={isSubmitting}
               >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Submitting Application...
-                  </span>
-                ) : (
-                  'Complete Registration'
-                )}
-              </button>
+                Complete Registration
+              </Button>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
