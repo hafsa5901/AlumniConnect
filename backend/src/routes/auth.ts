@@ -8,6 +8,7 @@ import {
   registerSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  changePasswordSchema,
 } from '../validators/auth';
 import * as authController from '../controllers/authController';
 
@@ -30,9 +31,29 @@ function makeRateLimiter(max: number, windowMs: number, code = 'RATE_LIMITED'): 
   });
 }
 
-const loginLimiter    = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
-const registerLimiter = makeRateLimiter(10,  60 * 60 * 1000); // 10/hr
-const forgotLimiter   = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
+function makeUserRateLimiter(max: number, windowMs: number, code = 'RATE_LIMITED'): RequestHandler {
+  if (env.AUTH_RATE_LIMIT_DISABLED) return (_req, _res, next) => next();
+  return rateLimit({
+    max,
+    windowMs,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+      return (req as any).user?._id?.toString() || (req as any).user?.id?.toString() || req.ip || 'anonymous';
+    },
+    handler: (_req, res) => {
+      res.status(429).json({
+        success: false,
+        error: { code, message: 'Too many requests. Please try again later.' },
+      });
+    },
+  });
+}
+
+const loginLimiter          = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
+const registerLimiter       = makeRateLimiter(10,  60 * 60 * 1000); // 10/hr
+const forgotLimiter         = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
+const changePasswordLimiter = makeUserRateLimiter(5,  15 * 60 * 1000); // 5/15min per user
 
 // ── Public routes ─────────────────────────────────────────────────────────────
 router.post('/register',        registerLimiter, validate(registerSchema),       authController.register);
@@ -43,7 +64,8 @@ router.post('/reset-password',                   validate(resetPasswordSchema), 
 router.post('/refresh',                                                           authController.refresh);
 
 // ── Protected routes ──────────────────────────────────────────────────────────
-router.post('/logout', authenticate, authController.logout);
-router.get('/me',      authenticate, authController.getMe);
+router.post('/logout',          authenticate, authController.logout);
+router.get('/me',               authenticate, authController.getMe);
+router.post('/change-password', authenticate, changePasswordLimiter, validate(changePasswordSchema), authController.changePassword);
 
 export default router;

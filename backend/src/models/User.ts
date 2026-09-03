@@ -174,6 +174,12 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
+// ── Compound Text Index for Search ──────────────────────────────────────────
+UserSchema.index(
+  { name: 'text', company: 'text', designation: 'text', department: 'text', skills: 'text' },
+  { weights: { name: 10, designation: 5, company: 5, department: 3, skills: 2 } }
+);
+
 // ── Safe projection: fields returned to clients by default ───────────────────
 export const SAFE_USER_FIELDS =
   '-passwordHash -verificationTokenHash -verificationTokenExpires -resetTokenHash -resetTokenExpires -refreshTokenHash -verificationNote -verificationDocUrl';

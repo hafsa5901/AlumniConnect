@@ -271,6 +271,28 @@ export async function resetPassword(rawToken: string, newPassword: string): Prom
   await user.save();
 }
 
+// ── Change password ──────────────────────────────────────────────────────────
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  const user = await User.findById(userId).select('+passwordHash');
+  if (!user) {
+    throw createError('User not found.', 404, 'NOT_FOUND');
+  }
+
+  const isCurrentValid = await comparePassword(currentPassword, user.passwordHash);
+  if (!isCurrentValid) {
+    throw createError('Incorrect current password.', 401, 'INVALID_CREDENTIALS');
+  }
+
+  user.passwordHash = await hashPassword(newPassword);
+  // Revoke existing sessions
+  user.refreshTokenHash = undefined;
+  await user.save();
+}
+
 // ── Admin: approve user ───────────────────────────────────────────────────────
 export async function approveUser(userId: string): Promise<IUser> {
   const user = await User.findByIdAndUpdate(

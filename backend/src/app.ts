@@ -7,6 +7,9 @@ import { env } from './config/env';
 import { errorHandler, createError } from './middleware/errorHandler';
 import authRouter from './routes/auth';
 import adminRouter from './routes/admin';
+import usersRouter from './routes/users';
+import dashboardRouter from './routes/dashboard';
+import alumniRouter from './routes/alumni';
 
 const app = express();
 
@@ -57,8 +60,11 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // ── API v1 routes ─────────────────────────────────────────────────────────────
-app.use('/api/v1/auth',  authRouter);
-app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/auth',      authRouter);
+app.use('/api/v1/admin',     adminRouter);
+app.use('/api/v1/users',     usersRouter);
+app.use('/api/v1/dashboard', dashboardRouter);
+app.use('/api/v1/alumni',    alumniRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

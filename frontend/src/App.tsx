@@ -16,10 +16,17 @@ const VerificationStatusPage = lazy(() => import('./pages/auth/VerificationStatu
 const UnauthorizedPage       = lazy(() => import('./pages/UnauthorizedPage'));
 const NotFoundPage           = lazy(() => import('./pages/NotFoundPage'));
 
-// Dashboard shells
-const StudentDashboard = lazy(() => import('./pages/dashboard/StudentDashboard'));
-const AlumniDashboard  = lazy(() => import('./pages/dashboard/AlumniDashboard'));
-const AdminDashboard   = lazy(() => import('./pages/dashboard/AdminDashboard'));
+// Dashboards & Phase 3B Pages
+const DashboardRouter        = lazy(() => import('./pages/dashboard/DashboardRouter'));
+const StudentDashboard       = lazy(() => import('./pages/dashboard/StudentDashboard'));
+const AlumniDashboard        = lazy(() => import('./pages/dashboard/AlumniDashboard'));
+const AdminDashboard         = lazy(() => import('./pages/dashboard/AdminDashboard'));
+const VerificationPage       = lazy(() => import('./pages/admin/VerificationPage'));
+const AlumniDirectoryPage    = lazy(() => import('./pages/alumni/AlumniDirectoryPage'));
+const AlumniProfilePage      = lazy(() => import('./pages/alumni/AlumniProfilePage'));
+const ProfileViewPage        = lazy(() => import('./pages/profile/ProfileViewPage'));
+const ProfileEditPage        = lazy(() => import('./pages/profile/ProfileEditPage'));
+const SettingsPage           = lazy(() => import('./pages/settings/SettingsPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +76,20 @@ export default function App() {
               <Route path="/verification-status" element={<VerificationStatusPage />} />
               <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
+              {/* Directory & Profiles */}
+              <Route path="/alumni" element={<AlumniDirectoryPage />} />
+              <Route path="/alumni/:id" element={<AlumniProfilePage />} />
+
+              {/* Authenticated Dashboard Root */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardRouter />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Student */}
               <Route
                 path="/dashboard/student/*"
@@ -95,6 +116,48 @@ export default function App() {
                 element={
                   <ProtectedRoute roles={['admin']}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/verification"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <VerificationPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* User Profile & Settings */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfileViewPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/edit"
+                element={
+                  <ProtectedRoute>
+                    <ProfileEditPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
                   </ProtectedRoute>
                 }
               />

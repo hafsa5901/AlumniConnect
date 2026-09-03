@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
+import { getNavigation } from '../../config/navigation';
 
 export interface SidebarProps {
   className?: string;
@@ -24,23 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
   const location = useLocation();
 
   const role = user?.role || 'student';
-  const dashboardRoot = `/dashboard/${role}`;
-
-  const navItems = [
-    { label: 'Overview', href: dashboardRoot, icon: LayoutDashboard },
-    { label: 'Directory', href: '/alumni', icon: Users },
-    { label: 'Events', href: '/events', icon: Calendar },
-    { label: 'Jobs & Referrals', href: '/jobs', icon: Briefcase },
-    { label: 'Mentorship', href: '/mentorship', icon: MessageSquare },
-  ];
-
-  if (role === 'admin') {
-    navItems.push({
-      label: 'Verification Queue',
-      href: '/dashboard/admin',
-      icon: ShieldAlert,
-    });
-  }
+  const navItems = getNavigation(role);
 
   return (
     <aside
@@ -72,6 +57,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
+
+            if (item.disabled) {
+              return (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between px-3.5 py-2.5 rounded-btn text-xs font-semibold text-slate-400 cursor-not-allowed select-none opacity-60"
+                  title="Coming soon in a future release"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-4 h-4 text-slate-400" />
+                    <span>{item.label}</span>
+                  </div>
+                  <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">Soon</span>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.label}

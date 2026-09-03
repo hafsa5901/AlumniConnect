@@ -4,11 +4,13 @@ export type AccountStatus = 'active' | 'suspended' | 'deactivated';
 
 export interface User {
   _id: string;
+  id?: string;
   name: string;
   email: string;
   role: Role;
   accountStatus: AccountStatus;
   verificationStatus: VerificationStatus;
+  verificationNote?: string;
   institution?: string;
   department?: string;
   batch?: string;

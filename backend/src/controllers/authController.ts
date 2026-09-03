@@ -72,6 +72,18 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
   res.json({ success: true, data: { message: 'Password reset successfully. Please log in again.' } });
 });
 
+// ── POST /api/v1/auth/change-password ────────────────────────────────────────
+export const changePassword = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user!._id.toString();
+  const { currentPassword, newPassword } = req.body;
+  await authService.changePassword(userId, currentPassword, newPassword);
+  clearRefreshCookie(res);
+  res.json({
+    success: true,
+    data: { message: 'Password changed successfully. Existing sessions have been revoked.' },
+  });
+});
+
 // ── GET /api/v1/auth/me ───────────────────────────────────────────────────────
 export const getMe = asyncHandler(async (req: Request, res: Response) => {
   // req.user is already the safe subset attached by authenticate()

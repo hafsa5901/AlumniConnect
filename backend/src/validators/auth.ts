@@ -74,6 +74,20 @@ export const resetPasswordSchema = z.object({
   path: ['confirmPassword'],
 });
 
+// ── Change password ────────────────────────────────────────────────────────────
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string({ required_error: 'Current password is required.' }).min(1),
+    newPassword: passwordSchema,
+    confirmPassword: z.string({ required_error: 'Please confirm your new password.' }),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+  });
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
 // ── Admin actions ─────────────────────────────────────────────────────────────
 export const rejectUserSchema = z.object({
   reason: z

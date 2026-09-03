@@ -74,7 +74,12 @@ export default function RegisterPage() {
     }
 
     setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    if (Object.keys(errors).length > 0) {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError);
+      return false;
+    }
+    return true;
   };
 
   const validateStep2 = () => {
@@ -84,11 +89,16 @@ export default function RegisterPage() {
     if (!formData.batch.trim()) errors.batch = 'Batch / Year is required.';
 
     if (formData.role === 'student' && !isInstitutional) {
-      errors.email = `Students must register with an institutional email (${ALLOWED_DOMAINS.join(', ')}).`;
+      errors.email = `Students must register with an institutional email (${ALLOWED_DOMAINS.join(', ')}). Your current email is ${formData.email}.`;
     }
 
     setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    if (Object.keys(errors).length > 0) {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError);
+      return false;
+    }
+    return true;
   };
 
   const handleNext = () => {
@@ -300,6 +310,36 @@ export default function RegisterPage() {
                     <div className="text-[11px] text-slate-500 mt-0.5">Institutional or personal email + review</div>
                   </button>
                 </div>
+
+                {formData.role === 'student' && !isInstitutional && (
+                  <div className="mt-3 p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2.5">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Institutional Email Required for Students:</span>
+                      <p className="mt-0.5 text-[11px] text-amber-800">
+                        Student accounts must use an institutional email ending in <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">@college.edu</code> or <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">@university.edu</code>.
+                        You entered <span className="font-mono font-semibold">{formData.email || 'a non-institutional email'}</span>.
+                      </p>
+                      <div className="mt-2 flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setStep(1)}
+                          className="font-bold text-navy-900 underline hover:text-blue-600 text-[11px]"
+                        >
+                          ← Change Email on Step 1
+                        </button>
+                        <span className="text-amber-400">|</span>
+                        <button
+                          type="button"
+                          onClick={() => updateField('role', 'alumni')}
+                          className="font-bold text-navy-900 underline hover:text-blue-600 text-[11px]"
+                        >
+                          Register as Alumni Graduate instead
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
