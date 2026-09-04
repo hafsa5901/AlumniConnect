@@ -33,6 +33,10 @@ const EventsPage             = lazy(() => import('./pages/events/EventsPage'));
 const EventDetailPage        = lazy(() => import('./pages/events/EventDetailPage'));
 const AdminEventsPage        = lazy(() => import('./pages/admin/AdminEventsPage'));
 
+// Phase 4B: Jobs
+const JobsPage               = lazy(() => import('./pages/jobs/JobsPage'));
+const JobDetailPage          = lazy(() => import('./pages/jobs/JobDetailPage'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -99,6 +103,24 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <EventDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Phase 4B: Jobs */}
+              <Route
+                path="/jobs"
+                element={
+                  <ProtectedRoute>
+                    <JobsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/jobs/:id"
+                element={
+                  <ProtectedRoute>
+                    <JobDetailPage />
                   </ProtectedRoute>
                 }
               />
