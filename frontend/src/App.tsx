@@ -37,6 +37,9 @@ const AdminEventsPage        = lazy(() => import('./pages/admin/AdminEventsPage'
 const JobsPage               = lazy(() => import('./pages/jobs/JobsPage'));
 const JobDetailPage          = lazy(() => import('./pages/jobs/JobDetailPage'));
 
+// Phase 4C: Mentorship
+const MentorshipPage         = lazy(() => import('./pages/mentorship/MentorshipPage'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -121,6 +124,16 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <JobDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Phase 4C: Mentorship */}
+              <Route
+                path="/mentorship"
+                element={
+                  <ProtectedRoute>
+                    <MentorshipPage />
                   </ProtectedRoute>
                 }
               />

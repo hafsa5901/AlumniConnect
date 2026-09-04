@@ -12,6 +12,7 @@ import dashboardRouter from './routes/dashboard';
 import alumniRouter from './routes/alumni';
 import eventsRouter from './routes/events';
 import jobsRouter from './routes/jobs';
+import mentorshipRouter from './routes/mentorship';
 
 const app = express();
 
@@ -67,8 +68,9 @@ app.use('/api/v1/admin',     adminRouter);
 app.use('/api/v1/users',     usersRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/alumni',    alumniRouter);
-app.use('/api/v1/events',    eventsRouter);
-app.use('/api/v1/jobs',      jobsRouter);
+app.use('/api/v1/events',     eventsRouter);
+app.use('/api/v1/jobs',       jobsRouter);
+app.use('/api/v1/mentorship', mentorshipRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {
