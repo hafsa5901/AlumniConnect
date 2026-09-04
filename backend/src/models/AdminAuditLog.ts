@@ -7,6 +7,7 @@ export type AuditAction =
   | 'user.reactivate'
   | 'user.delete'
   | 'user.create_admin'
+  | 'user.role_change'
   | 'event.approve'
   | 'event.reject'
   | 'event.cancel'
@@ -28,7 +29,7 @@ const AdminAuditLogSchema = new Schema<IAdminAuditLog>(
       type: String,
       enum: [
         'user.approve', 'user.reject', 'user.suspend', 'user.reactivate',
-        'user.delete', 'user.create_admin', 'event.approve', 'event.reject',
+        'user.delete', 'user.create_admin', 'user.role_change', 'event.approve', 'event.reject',
         'event.cancel', 'job.remove',
       ] satisfies AuditAction[],
       required: true,
@@ -45,6 +46,8 @@ const AdminAuditLogSchema = new Schema<IAdminAuditLog>(
     },
   }
 );
+
+AdminAuditLogSchema.index({ createdAt: -1, action: 1 });
 
 const AdminAuditLog: Model<IAdminAuditLog> =
   mongoose.models.AdminAuditLog ||

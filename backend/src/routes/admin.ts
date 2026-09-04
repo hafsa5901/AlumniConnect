@@ -11,10 +11,12 @@ router.use(authenticate, requireRole('admin'));
 
 router.get('/dashboard',               adminController.getDashboardStats);
 router.get('/users',                   adminController.listUsers);
+router.get('/users/:id',               adminController.getUserById);
 router.patch('/users/:id/approve',     adminController.approveUser);
 router.patch('/users/:id/reject',      validate(rejectUserSchema), adminController.rejectUser);
 router.patch('/users/:id/suspend',     adminController.suspendUser);
 router.patch('/users/:id/reactivate',  adminController.reactivateUser);
+router.patch('/users/:id/role',        adminController.changeUserRole);
 router.get('/audit-logs',              adminController.getAuditLogs);
 
 export default router;

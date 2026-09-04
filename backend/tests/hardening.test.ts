@@ -98,7 +98,8 @@ describe('Phase 2 Hardening & Security Checks', () => {
     // Admin suspends user
     const suspRes = await request(app)
       .patch(`/api/v1/admin/users/${userId}/suspend`)
-      .set('Authorization', `Bearer ${adminToken}`);
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reason: 'Security violation test' });
     expect(suspRes.status).toBe(200);
 
     // Refresh attempt with existing cookie must fail
@@ -311,7 +312,8 @@ describe('Phase 2 Hardening & Security Checks', () => {
     // 3. Suspend
     await request(app)
       .patch(`/api/v1/admin/users/${targetUser._id}/suspend`)
-      .set('Authorization', `Bearer ${adminToken}`);
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reason: 'Audit log suspend test' });
     logs = await AdminAuditLog.find({ targetId: targetUser._id });
     expect(logs.length).toBe(3);
     expect(logs[2].action).toBe('user.suspend');

@@ -40,6 +40,10 @@ const JobDetailPage          = lazy(() => import('./pages/jobs/JobDetailPage'));
 // Phase 4C: Mentorship
 const MentorshipPage         = lazy(() => import('./pages/mentorship/MentorshipPage'));
 
+// Phase 4D: Admin User Governance & Audit Logs
+const AdminUsersPage         = lazy(() => import('./pages/admin/AdminUsersPage'));
+const AdminAuditLogsPage     = lazy(() => import('./pages/admin/AdminAuditLogsPage'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -198,6 +202,22 @@ export default function App() {
                 element={
                   <ProtectedRoute roles={['admin']}>
                     <AdminEventsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminUsersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/audit"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminAuditLogsPage />
                   </ProtectedRoute>
                 }
               />

@@ -46,10 +46,10 @@ export const navigationConfig: Record<Role, NavItemConfig[]> = {
     { label: 'Event Approvals', href: '/admin/events', icon: Calendar },
     { label: 'Events', href: '/events', icon: Calendar },
     { label: 'Jobs & Referrals', href: '/jobs', icon: Briefcase },
+    { label: 'Manage Users', href: '/admin/users', icon: UserCog },
+    { label: 'Audit Logs', href: '/admin/audit', icon: FileText },
     { label: 'Alumni Directory', href: '/alumni', icon: Users },
     { label: 'Settings', href: '/settings', icon: Settings },
-    { label: 'Manage Users', href: '/admin/users', icon: UserCog, disabled: true },
-    { label: 'Audit Logs', href: '/admin/audit', icon: FileText, disabled: true },
     { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, disabled: true },
   ],
 };

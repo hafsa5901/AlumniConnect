@@ -425,7 +425,8 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
     // Suspend user
     const suspendRes = await request(app)
       .patch(`/api/v1/admin/users/${userToSuspend._id}/suspend`)
-      .set('Authorization', `Bearer ${adminToken}`);
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reason: 'Policy violation' });
 
     expect(suspendRes.status).toBe(200);
     expect(suspendRes.body.data.user.accountStatus).toBe('suspended');

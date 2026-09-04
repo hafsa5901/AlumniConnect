@@ -222,7 +222,7 @@ export const eventsController = {
           createError(
             'Only the event organizer or an administrator may view the attendee list.',
             403,
-            'FORBIDDEN'
+            'FORBIDDEN_OWNERSHIP'
           )
         );
       }

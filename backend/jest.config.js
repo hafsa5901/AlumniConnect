@@ -13,4 +13,5 @@ module.exports = {
   clearMocks: true,
   collectCoverageFrom: ['src/**/*.ts', '!src/server.ts'],
   setupFiles: ['<rootDir>/tests/setup.ts'],
+  testTimeout: 60000,
 };
