@@ -44,6 +44,9 @@ const MentorshipPage         = lazy(() => import('./pages/mentorship/MentorshipP
 const AdminUsersPage         = lazy(() => import('./pages/admin/AdminUsersPage'));
 const AdminAuditLogsPage     = lazy(() => import('./pages/admin/AdminAuditLogsPage'));
 
+// Phase 5A: Real-Time Messaging
+const MessagesPage           = lazy(() => import('./pages/messages/MessagesPage'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -138,6 +141,16 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <MentorshipPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Phase 5A: Messages */}
+              <Route
+                path="/messages"
+                element={
+                  <ProtectedRoute>
+                    <MessagesPage />
                   </ProtectedRoute>
                 }
               />

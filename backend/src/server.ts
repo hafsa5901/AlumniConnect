@@ -2,12 +2,16 @@ import { createServer } from 'http';
 import { env } from './config/env';
 import { connectDB } from './config/db';
 import app from './app';
+import { initSocket } from './socket';
 
 async function bootstrap(): Promise<void> {
   // Connect to MongoDB first — exits process on failure
   await connectDB();
 
   const httpServer = createServer(app);
+
+  // Mount Socket.IO
+  initSocket(httpServer);
 
   httpServer.listen(env.PORT, () => {
     console.log(`🚀 AlumniConnect API running on port ${env.PORT} [${env.NODE_ENV}]`);
