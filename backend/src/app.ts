@@ -14,6 +14,7 @@ import eventsRouter from './routes/events';
 import jobsRouter from './routes/jobs';
 import mentorshipRouter from './routes/mentorship';
 import messagingRouter from './routes/messaging';
+import notificationsRouter from './routes/notifications';
 
 const app = express();
 
@@ -73,6 +74,7 @@ app.use('/api/v1/events',     eventsRouter);
 app.use('/api/v1/jobs',       jobsRouter);
 app.use('/api/v1/mentorship', mentorshipRouter);
 app.use('/api/v1/messaging',  messagingRouter);
+app.use('/api/v1/notifications', notificationsRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

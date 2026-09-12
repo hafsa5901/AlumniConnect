@@ -3,6 +3,7 @@ import mongoose, { Types } from 'mongoose';
 import Event, { IEvent } from '../models/Event';
 import User from '../models/User';
 import AdminAuditLog from '../models/AdminAuditLog';
+import notificationService from '../services/notificationService';
 import { createError } from '../middleware/errorHandler';
 import { createEventSchema, rejectEventSchema } from '../validators/event';
 
@@ -356,6 +357,17 @@ export const eventsController = {
         metadata: { title: evt.title },
       });
 
+      // Notification: event_approved -> organizer
+      await notificationService.createNotification({
+        recipient: evt.organizer,
+        actor: req.user!._id,
+        type: 'event_approved',
+        title: 'Event Approved',
+        message: `Your event "${evt.title}" has been approved and published to the campus calendar.`,
+        relatedEntityType: 'event',
+        relatedEntityId: evt._id,
+      });
+
       res.status(200).json({
         success: true,
         data: {
@@ -401,6 +413,17 @@ export const eventsController = {
         targetType: 'event',
         targetId: evt._id,
         metadata: { title: evt.title, reason: evt.rejectionReason },
+      });
+
+      // Notification: event_rejected -> organizer
+      await notificationService.createNotification({
+        recipient: evt.organizer,
+        actor: req.user!._id,
+        type: 'event_rejected',
+        title: 'Event Not Approved',
+        message: `Your event "${evt.title}" was declined by an administrator.${evt.rejectionReason ? ` Reason: ${evt.rejectionReason}` : ''}`,
+        relatedEntityType: 'event',
+        relatedEntityId: evt._id,
       });
 
       res.status(200).json({

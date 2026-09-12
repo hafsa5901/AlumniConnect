@@ -7,6 +7,8 @@ import User, { IUser, SAFE_USER_FIELDS } from '../models/User';
 import AdminAuditLog from '../models/AdminAuditLog';
 import { createError } from '../middleware/errorHandler';
 import { emitToUser } from '../socket';
+import notificationService from '../services/notificationService';
+import messagingService from '../services/messagingService';
 
 // ── 1. GET /api/v1/messaging/eligible-contacts ─────────────────────────────
 export async function getEligibleContacts(req: Request, res: Response): Promise<void> {
@@ -371,83 +373,12 @@ export async function sendMessage(req: Request, res: Response): Promise<void> {
   const currentUserId = req.user!._id;
   const { content } = req.body;
 
-  if (!id || !mongoose.isValidObjectId(id)) {
-    throw createError('Conversation not found.', 404, 'NOT_FOUND');
-  }
-
-  const trimmed = (content || '').trim();
-  if (!trimmed) {
-    throw createError('Message content cannot be empty.', 400, 'VALIDATION_ERROR');
-  }
-
-  if (trimmed.length > 2000) {
-    throw createError('Message content cannot exceed 2000 characters.', 400, 'VALIDATION_ERROR');
-  }
-
-  const conversation = await Conversation.findById(id);
-  if (!conversation) {
-    throw createError('Conversation not found.', 404, 'NOT_FOUND');
-  }
-
-  const isPartA = conversation.participantA.toString() === currentUserId.toString();
-  const isPartB = conversation.participantB.toString() === currentUserId.toString();
-
-  if (!isPartA && !isPartB) {
-    throw createError('You are not a participant in this conversation.', 403, 'FORBIDDEN_OWNERSHIP');
-  }
-
-  const recipientId = isPartA ? conversation.participantB : conversation.participantA;
-  const recipient = await User.findById(recipientId);
-
-  if (!recipient || recipient.accountStatus !== 'active') {
-    throw createError('Recipient account is inactive or suspended.', 403, 'RECIPIENT_INACTIVE');
-  }
-
-  // Persist message first
-  const message = await Message.create({
-    conversation: conversation._id,
-    sender: currentUserId,
-    recipient: recipient._id,
-    content: trimmed,
-  });
-
-  // Update conversation
-  conversation.lastMessage = trimmed;
-  conversation.lastMessageAt = message.createdAt;
-  await conversation.save();
-
-  const populatedMessage = await Message.findById(message._id)
-    .populate('sender', 'name email profilePhotoUrl role')
-    .populate('recipient', 'name email profilePhotoUrl role');
-
-  // Emit socket events
-  emitToUser(currentUserId.toString(), 'message:new', { message: populatedMessage });
-  emitToUser(recipient._id.toString(), 'message:new', { message: populatedMessage });
-
-  const recipientUnreadCount = await Message.countDocuments({
-    conversation: conversation._id,
-    recipient: recipient._id,
-    readAt: null,
-  });
-
-  emitToUser(currentUserId.toString(), 'conversation:updated', {
-    conversationId: conversation._id,
-    lastMessage: trimmed,
-    lastMessageAt: message.createdAt,
-    unreadCount: 0,
-  });
-
-  emitToUser(recipient._id.toString(), 'conversation:updated', {
-    conversationId: conversation._id,
-    lastMessage: trimmed,
-    lastMessageAt: message.createdAt,
-    unreadCount: recipientUnreadCount,
-  });
+  const result = await messagingService.sendMessage(currentUserId, id as string, content);
 
   res.status(201).json({
     success: true,
     data: {
-      message: populatedMessage,
+      message: result.message,
     },
   });
 }
@@ -457,56 +388,13 @@ export async function markConversationRead(req: Request, res: Response): Promise
   const { id } = req.params;
   const currentUserId = req.user!._id;
 
-  if (!id || !mongoose.isValidObjectId(id)) {
-    throw createError('Conversation not found.', 404, 'NOT_FOUND');
-  }
-
-  const conversation = await Conversation.findById(id);
-  if (!conversation) {
-    throw createError('Conversation not found.', 404, 'NOT_FOUND');
-  }
-
-  const isPartA = conversation.participantA.toString() === currentUserId.toString();
-  const isPartB = conversation.participantB.toString() === currentUserId.toString();
-
-  if (!isPartA && !isPartB) {
-    throw createError('You are not a participant in this conversation.', 403, 'FORBIDDEN_OWNERSHIP');
-  }
-
-  const otherUserId = isPartA ? conversation.participantB.toString() : conversation.participantA.toString();
-
-  const now = new Date();
-  const result = await Message.updateMany(
-    {
-      conversation: conversation._id,
-      recipient: currentUserId,
-      readAt: null,
-    },
-    {
-      $set: { readAt: now },
-    }
-  );
-
-  if (result.modifiedCount > 0) {
-    emitToUser(currentUserId.toString(), 'message:read', {
-      conversationId: conversation._id,
-      readAt: now,
-    });
-    emitToUser(otherUserId, 'message:read', {
-      conversationId: conversation._id,
-      readAt: now,
-    });
-    emitToUser(currentUserId.toString(), 'conversation:updated', {
-      conversationId: conversation._id,
-      unreadCount: 0,
-    });
-  }
+  const result = await messagingService.markConversationRead(currentUserId, id as string);
 
   res.json({
     success: true,
     data: {
       modifiedCount: result.modifiedCount,
-      readAt: now,
+      readAt: result.readAt,
     },
   });
 }

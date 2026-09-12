@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import Job, { IJob } from '../models/Job';
+import notificationService from '../services/notificationService';
 import { createJobSchema, updateJobSchema } from '../validators/job';
 import { createError } from '../middleware/errorHandler';
 
@@ -395,6 +396,19 @@ export const jobsController = {
       }
 
       await Job.findByIdAndDelete(id);
+
+      // Notification: job_removed_by_admin -> poster (only if admin deletes someone else's job)
+      if (isAdmin && !isOwner) {
+        await notificationService.createNotification({
+          recipient: job.postedBy,
+          actor: req.user!._id,
+          type: 'job_removed_by_admin',
+          title: 'Job Posting Removed',
+          message: `Your job posting "${job.title}" at ${job.company} was removed by an administrator.`,
+          relatedEntityType: 'job',
+          relatedEntityId: job._id,
+        });
+      }
 
       res.status(200).json({
         success: true,

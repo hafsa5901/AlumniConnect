@@ -6,6 +6,7 @@ import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { Dropdown } from '../ui/Dropdown';
 import { MobileMenu } from '../navigation/MobileMenu';
+import { NotificationsPopover } from './NotificationsPopover';
 
 export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -127,14 +128,7 @@ export const Navbar: React.FC = () => {
                     <span>Dashboard</span>
                   </Link>
 
-                  <button
-                    type="button"
-                    className="p-2 rounded-btn text-slate-500 hover:text-navy-900 hover:bg-slate-50 transition-colors relative"
-                    aria-label="Notifications"
-                    title="Notifications"
-                  >
-                    <Bell className="w-4 h-4" />
-                  </button>
+                  <NotificationsPopover />
 
                   <Dropdown
                     align="right"

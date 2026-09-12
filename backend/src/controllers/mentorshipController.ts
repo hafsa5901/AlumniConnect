@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import User from '../models/User';
 import MentorshipRequest from '../models/MentorshipRequest';
+import notificationService from '../services/notificationService';
 import {
   createMentorshipRequestSchema,
   updateMentorshipStatusSchema,
@@ -294,6 +295,17 @@ export const mentorshipController = {
           select: '_id name profilePhotoUrl designation company department batch role skills',
         });
 
+      // Notification: mentorship_request -> mentor
+      await notificationService.createNotification({
+        recipient: mentor._id,
+        actor: req.user!._id,
+        type: 'mentorship_request',
+        title: 'New Mentorship Request',
+        message: `${req.user!.name} requested 1-on-1 mentorship with you on "${topic}".`,
+        relatedEntityType: 'mentorship',
+        relatedEntityId: mentorshipRequest._id,
+      });
+
       res.status(201).json({
         success: true,
         data: {
@@ -405,6 +417,39 @@ export const mentorshipController = {
           path: 'mentor',
           select: '_id name profilePhotoUrl designation company department batch role skills',
         });
+
+      // Status transition notifications -> student
+      if (targetStatus === 'accepted') {
+        await notificationService.createNotification({
+          recipient: requestDoc.student,
+          actor: req.user!._id,
+          type: 'mentorship_accepted',
+          title: 'Mentorship Request Accepted',
+          message: `${req.user!.name} accepted your mentorship request on "${requestDoc.topic}".`,
+          relatedEntityType: 'mentorship',
+          relatedEntityId: requestDoc._id,
+        });
+      } else if (targetStatus === 'rejected') {
+        await notificationService.createNotification({
+          recipient: requestDoc.student,
+          actor: req.user!._id,
+          type: 'mentorship_rejected',
+          title: 'Mentorship Request Declined',
+          message: `${req.user!.name} was unable to accept your mentorship request on "${requestDoc.topic}".`,
+          relatedEntityType: 'mentorship',
+          relatedEntityId: requestDoc._id,
+        });
+      } else if (targetStatus === 'completed') {
+        await notificationService.createNotification({
+          recipient: requestDoc.student,
+          actor: req.user!._id,
+          type: 'mentorship_completed',
+          title: 'Mentorship Completed',
+          message: `${req.user!.name} marked your mentorship connection on "${requestDoc.topic}" as completed.`,
+          relatedEntityType: 'mentorship',
+          relatedEntityId: requestDoc._id,
+        });
+      }
 
       res.status(200).json({
         success: true,
