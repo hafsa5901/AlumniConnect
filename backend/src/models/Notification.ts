@@ -8,9 +8,12 @@ export type NotificationType =
   | 'new_message'
   | 'event_approved'
   | 'event_rejected'
-  | 'job_removed_by_admin';
+  | 'job_removed_by_admin'
+  | 'referral_request_received'
+  | 'referral_request_accepted'
+  | 'referral_request_rejected';
 
-export type RelatedEntityType = 'mentorship' | 'message' | 'conversation' | 'event' | 'job' | 'user';
+export type RelatedEntityType = 'mentorship' | 'message' | 'conversation' | 'event' | 'job' | 'user' | 'referral';
 
 export interface INotification extends Document {
   _id: Types.ObjectId;
@@ -45,6 +48,9 @@ const NotificationSchema = new Schema<INotification>(
         'event_approved',
         'event_rejected',
         'job_removed_by_admin',
+        'referral_request_received',
+        'referral_request_accepted',
+        'referral_request_rejected',
       ],
       required: [true, 'Notification type is required'],
     },
@@ -66,7 +72,7 @@ const NotificationSchema = new Schema<INotification>(
     },
     relatedEntityType: {
       type: String,
-      enum: ['mentorship', 'message', 'conversation', 'event', 'job', 'user'],
+      enum: ['mentorship', 'message', 'conversation', 'event', 'job', 'user', 'referral'],
     },
     relatedEntityId: {
       type: Schema.Types.ObjectId,

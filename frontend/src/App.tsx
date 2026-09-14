@@ -34,9 +34,10 @@ const EventsPage             = lazy(() => import('./pages/events/EventsPage'));
 const EventDetailPage        = lazy(() => import('./pages/events/EventDetailPage'));
 const AdminEventsPage        = lazy(() => import('./pages/admin/AdminEventsPage'));
 
-// Phase 4B: Jobs
+// Phase 4B & 5D: Jobs & Referrals
 const JobsPage               = lazy(() => import('./pages/jobs/JobsPage'));
 const JobDetailPage          = lazy(() => import('./pages/jobs/JobDetailPage'));
+const ReferralsManagerPage   = lazy(() => import('./pages/jobs/ReferralsManagerPage'));
 
 // Phase 4C: Mentorship
 const MentorshipPage         = lazy(() => import('./pages/mentorship/MentorshipPage'));
@@ -124,6 +125,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <JobsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/jobs/referrals"
+                element={
+                  <ProtectedRoute>
+                    <ReferralsManagerPage />
                   </ProtectedRoute>
                 }
               />

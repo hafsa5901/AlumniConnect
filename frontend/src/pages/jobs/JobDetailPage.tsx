@@ -27,8 +27,12 @@ import {
   Power,
   ShieldCheck,
   Check,
+  Send,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ReferralRequestModal } from '../../components/referrals/ReferralRequestModal';
+import { referralsService } from '../../services/referralsService';
+import { ReferralRequestItem } from '../../types';
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +46,21 @@ export default function JobDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isStatusToggling, setIsStatusToggling] = useState(false);
+  const [isReferralModalOpen, setIsReferralModalOpen] = useState(false);
+  const [myReferral, setMyReferral] = useState<ReferralRequestItem | null>(null);
+
+  const checkMyReferral = async (jobId: string) => {
+    if (!user) return;
+    try {
+      const res = await referralsService.getMyRequests({ limit: 50 });
+      const found = res.data.data?.items?.find(
+        (r) => (r.job?._id?.toString() === jobId || r.job?.id?.toString() === jobId)
+      );
+      setMyReferral(found || null);
+    } catch {
+      // Non-blocking
+    }
+  };
 
   const fetchJob = async () => {
     if (!id) {
@@ -55,6 +74,7 @@ export default function JobDetailPage() {
       const res = await jobsService.getJobById(id);
       setJob(res.data.data.job);
       setIs404(false);
+      checkMyReferral(id);
     } catch (err: any) {
       setIs404(true);
     } finally {
@@ -430,11 +450,44 @@ export default function JobDetailPage() {
                     </div>
 
                     {job.referralAvailable && (
-                      <div className="p-3 bg-emerald-50/80 border border-emerald-200/80 rounded-xl text-xs text-emerald-800 leading-relaxed flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>
-                          <strong>Internal Referral:</strong> The poster indicated they may be open to providing a referral. You can view their alumni profile to learn more.
-                        </span>
+                      <div className="p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-xl space-y-3 text-xs text-emerald-900 leading-relaxed">
+                        <div className="flex items-start gap-2 font-medium">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>
+                            <strong>Internal Referral Available:</strong> The poster is open to referring qualified candidates.
+                          </span>
+                        </div>
+
+                        {!isOwner && user && (
+                          <div className="pt-2 border-t border-emerald-200/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                            {myReferral ? (
+                              <div className="flex items-center justify-between w-full">
+                                <span className="font-semibold text-emerald-800">
+                                  Status: <span className="capitalize">{myReferral.status}</span>
+                                </span>
+                                <Link
+                                  to="/jobs/referrals"
+                                  className="font-bold underline hover:text-emerald-950 flex items-center gap-1"
+                                >
+                                  View in Referrals
+                                  <ExternalLink className="w-3 h-3" />
+                                </Link>
+                              </div>
+                            ) : job.status === 'open' ? (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                className="w-full bg-emerald-700 hover:bg-emerald-800 border-emerald-700"
+                                onClick={() => setIsReferralModalOpen(true)}
+                              >
+                                <Send className="w-3.5 h-3.5 mr-1.5" />
+                                Request Referral
+                              </Button>
+                            ) : (
+                              <span className="text-slate-500 italic">Listing closed for referrals</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -452,6 +505,23 @@ export default function JobDetailPage() {
           onClose={() => setIsEditModalOpen(false)}
           onSuccess={fetchJob}
           jobToEdit={job}
+        />
+      )}
+
+      {/* Referral Request Modal */}
+      {job && (
+        <ReferralRequestModal
+          isOpen={isReferralModalOpen}
+          onClose={() => setIsReferralModalOpen(false)}
+          job={{
+            id: job.id || (job as any)._id,
+            title: job.title,
+            company: job.company,
+            postedBy: job.postedBy,
+          }}
+          onSuccess={() => {
+            if (id) checkMyReferral(id);
+          }}
         />
       )}
 

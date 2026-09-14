@@ -72,3 +72,30 @@ export interface PaginatedResponse<T> {
   total: number;
   totalPages: number;
 }
+
+export type ReferralStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+
+export interface ReferralRequestItem {
+  _id: string;
+  id?: string;
+  job: {
+    _id: string;
+    id?: string;
+    title: string;
+    company: string;
+    location?: string;
+    jobType?: string;
+    workplaceType?: string;
+    experienceLevel?: string;
+    status: 'open' | 'closed';
+  } | null;
+  jobPoster: Partial<User>;
+  applicant: Partial<User>;
+  status: ReferralStatus;
+  message: string;
+  responseNote?: string;
+  resumeIncluded: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
