@@ -11,6 +11,7 @@ export interface AlumniListItem {
   skills: string[];
   location?: string;
   mentorshipEnabled: boolean;
+  hasResume?: boolean;
 }
 
 export interface AlumniDetailItem extends AlumniListItem {
@@ -31,12 +32,19 @@ export interface AlumniDetailItem extends AlumniListItem {
   }>;
   links: Record<string, string>;
   joinedDate?: string;
+  resume?: {
+    originalName: string;
+    mimeType: string;
+    size: number;
+    uploadedAt: string;
+  } | null;
 }
 
 export interface AlumniQueryFilters {
   search?: string;
   department?: string;
   batch?: string;
+  degree?: string;
   company?: string;
   skills?: string;
   location?: string;
@@ -50,6 +58,7 @@ export const alumniService = {
     if (filters.search) params.append('search', filters.search);
     if (filters.department) params.append('department', filters.department);
     if (filters.batch) params.append('batch', filters.batch);
+    if (filters.degree) params.append('degree', filters.degree);
     if (filters.company) params.append('company', filters.company);
     if (filters.skills) params.append('skills', filters.skills);
     if (filters.location) params.append('location', filters.location);

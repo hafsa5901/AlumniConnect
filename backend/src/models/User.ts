@@ -21,6 +21,14 @@ export interface IExperience {
   description?: string;
 }
 
+export interface IResumeMetadata {
+  originalName: string;
+  storagePath?: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: Date;
+}
+
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -41,6 +49,7 @@ export interface IUser extends Document {
   alumniId?: string;
   // Profile
   profilePhotoUrl?: string;
+  resume?: IResumeMetadata | null;
   bio?: string;
   skills: string[];
   education: IEducation[];
@@ -79,6 +88,17 @@ const ExperienceSchema = new Schema<IExperience>(
     startDate: { type: String, required: true },
     endDate: { type: String },
     description: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
+const ResumeMetadataSchema = new Schema<IResumeMetadata>(
+  {
+    originalName: { type: String, required: true, trim: true },
+    storagePath: { type: String, required: true, select: false },
+    mimeType: { type: String, required: true },
+    size: { type: Number, required: true },
+    uploadedAt: { type: Date, default: Date.now },
   },
   { _id: false }
 );
@@ -133,6 +153,7 @@ const UserSchema = new Schema<IUser>(
     alumniId: { type: String, trim: true },
 
     profilePhotoUrl: { type: String, trim: true },
+    resume: { type: ResumeMetadataSchema, default: null },
     bio: { type: String, trim: true, maxlength: 1000 },
     skills: [{ type: String, trim: true }],
     education: [EducationSchema],
@@ -168,6 +189,9 @@ const UserSchema = new Schema<IUser>(
         delete ret.resetTokenHash;
         delete ret.resetTokenExpires;
         delete ret.refreshTokenHash;
+        if (ret.resume) {
+          delete ret.resume.storagePath;
+        }
         return ret;
       },
     },
@@ -182,7 +206,7 @@ UserSchema.index(
 
 // ── Safe projection: fields returned to clients by default ───────────────────
 export const SAFE_USER_FIELDS =
-  '-passwordHash -verificationTokenHash -verificationTokenExpires -resetTokenHash -resetTokenExpires -refreshTokenHash -verificationNote -verificationDocUrl';
+  '-passwordHash -verificationTokenHash -verificationTokenExpires -resetTokenHash -resetTokenExpires -refreshTokenHash -verificationNote -verificationDocUrl -resume.storagePath';
 
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 export default User;

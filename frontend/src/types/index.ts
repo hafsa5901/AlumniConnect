@@ -2,6 +2,13 @@ export type Role = 'student' | 'alumni' | 'admin';
 export type VerificationStatus = 'pending' | 'email_verified' | 'admin_approved' | 'rejected';
 export type AccountStatus = 'active' | 'suspended' | 'deactivated';
 
+export interface ResumeMetadata {
+  originalName: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: string;
+}
+
 export interface User {
   _id: string;
   id?: string;
@@ -17,6 +24,8 @@ export interface User {
   studentId?: string;
   alumniId?: string;
   profilePhotoUrl?: string;
+  resume?: ResumeMetadata | null;
+  hasResume?: boolean;
   bio?: string;
   skills: string[];
   education: EducationEntry[];

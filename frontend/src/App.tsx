@@ -26,6 +26,7 @@ const AlumniDirectoryPage    = lazy(() => import('./pages/alumni/AlumniDirectory
 const AlumniProfilePage      = lazy(() => import('./pages/alumni/AlumniProfilePage'));
 const ProfileViewPage        = lazy(() => import('./pages/profile/ProfileViewPage'));
 const ProfileEditPage        = lazy(() => import('./pages/profile/ProfileEditPage'));
+const ResumeManagerPage      = lazy(() => import('./pages/profile/ResumeManagerPage'));
 const SettingsPage           = lazy(() => import('./pages/settings/SettingsPage'));
 
 // Phase 4A: Events
@@ -249,6 +250,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <ProfileEditPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/resume"
+                element={
+                  <ProtectedRoute>
+                    <ResumeManagerPage />
                   </ProtectedRoute>
                 }
               />

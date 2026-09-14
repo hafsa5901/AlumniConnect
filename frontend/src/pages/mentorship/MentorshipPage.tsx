@@ -624,7 +624,16 @@ export default function MentorshipPage() {
                     </div>
 
                     {isAlumni && (
-                      <div className="pt-3 border-t border-slate-100 flex justify-end">
+                      <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                        <a
+                          href={`/api/v1/users/${conn.student.id || (conn.student as any)._id}/resume`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold text-xs transition-colors"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Download Mentee Resume</span>
+                        </a>
                         <Button
                           variant="outline"
                           size="sm"

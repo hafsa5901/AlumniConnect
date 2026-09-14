@@ -7,6 +7,7 @@ export async function listAlumni(req: Request, res: Response): Promise<void> {
     search,
     department,
     batch,
+    degree,
     company,
     skills,
     location,
@@ -31,6 +32,14 @@ export async function listAlumni(req: Request, res: Response): Promise<void> {
 
   if (batch && typeof batch === 'string' && batch.trim()) {
     filter.batch = batch.trim();
+  }
+
+  if (degree && typeof degree === 'string' && degree.trim()) {
+    filter.education = {
+      $elemMatch: {
+        degree: new RegExp(`^${degree.trim()}$`, 'i'),
+      },
+    };
   }
 
   if (company && typeof company === 'string' && company.trim()) {
@@ -62,7 +71,7 @@ export async function listAlumni(req: Request, res: Response): Promise<void> {
   const [total, alumni] = await Promise.all([
     User.countDocuments(filter),
     User.find(filter)
-      .select('name profilePhotoUrl designation company department batch skills location mentorshipEnabled')
+      .select('name profilePhotoUrl designation company department batch skills location mentorshipEnabled resume')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum)
@@ -80,6 +89,7 @@ export async function listAlumni(req: Request, res: Response): Promise<void> {
     skills: doc.skills || [],
     location: doc.location,
     mentorshipEnabled: Boolean(doc.mentorshipEnabled),
+    hasResume: Boolean(doc.resume && doc.resume.originalName),
   }));
 
   res.status(200).json({
@@ -116,7 +126,7 @@ export async function getAlumniById(req: Request, res: Response): Promise<void> 
     accountStatus: 'active',
   })
     .select(
-      'name profilePhotoUrl designation company department batch skills location mentorshipEnabled bio education experience links createdAt'
+      'name profilePhotoUrl designation company department batch skills location mentorshipEnabled bio education experience links createdAt resume'
     )
     .lean();
 
@@ -144,6 +154,15 @@ export async function getAlumniById(req: Request, res: Response): Promise<void> 
     experience: alumni.experience || [],
     links: alumni.links || {},
     joinedDate: alumni.createdAt,
+    hasResume: Boolean(alumni.resume && alumni.resume.originalName),
+    resume: alumni.resume
+      ? {
+          originalName: alumni.resume.originalName,
+          mimeType: alumni.resume.mimeType,
+          size: alumni.resume.size,
+          uploadedAt: alumni.resume.uploadedAt,
+        }
+      : null,
   };
 
   res.status(200).json({

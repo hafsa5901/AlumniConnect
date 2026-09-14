@@ -57,9 +57,69 @@ function handlePhotoUpload(req: Request, res: Response, next: NextFunction): voi
   });
 }
 
+// ── Multer Configuration: Resume ──────────────────────────────────────────────
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    const allowedMimes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('INVALID_MIME_TYPE'));
+    }
+  },
+});
+
+function handleResumeUpload(req: Request, res: Response, next: NextFunction): void {
+  resumeUpload.single('resume')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        res.status(413).json({
+          success: false,
+          error: {
+            code: 'FILE_TOO_LARGE',
+            message: 'Resume file size exceeds maximum limit of 5MB.',
+          },
+        });
+        return;
+      }
+      if (err.message === 'INVALID_MIME_TYPE') {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_MIME_TYPE',
+            message: 'Only PDF, DOC, and DOCX resume formats are supported.',
+          },
+        });
+        return;
+      }
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: err.message || 'File upload failed.',
+        },
+      });
+      return;
+    }
+    next();
+  });
+}
+
 // ── User Routes ───────────────────────────────────────────────────────────────
 router.get('/me', authenticate, usersController.getMe);
 router.patch('/me', authenticate, validate(updateProfileSchema), usersController.updateMe);
 router.post('/me/photo', authenticate, handlePhotoUpload, usersController.uploadPhoto);
+
+// ── Resume Routes ─────────────────────────────────────────────────────────────
+router.post('/me/resume', authenticate, handleResumeUpload, usersController.uploadResume);
+router.delete('/me/resume', authenticate, usersController.deleteResume);
+router.get('/me/resume', authenticate, usersController.getMyResume);
+router.get('/:id/resume', authenticate, usersController.getResumeById);
 
 export default router;

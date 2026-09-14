@@ -19,6 +19,8 @@ import {
   UserCheck,
   ShieldCheck,
   Lock,
+  FileText,
+  Download,
 } from 'lucide-react';
 
 export default function ProfileViewPage() {
@@ -183,6 +185,49 @@ export default function ProfileViewPage() {
                 </div>
               </div>
             )}
+
+            {/* Resume Document Status */}
+            <div className="p-4 bg-slate-50 rounded-card border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 text-blue-800 rounded-lg shrink-0">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-navy-900">Resume / CV</span>
+                    {currentUser?.resume?.originalName ? (
+                      <Badge variant="green" size="sm">Attached</Badge>
+                    ) : (
+                      <Badge variant="yellow" size="sm">Not Uploaded</Badge>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {currentUser?.resume?.originalName
+                      ? `${currentUser.resume.originalName} (${(currentUser.resume.size / 1024).toFixed(0)} KB)`
+                      : 'Attach your latest resume to complete your career profile.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {currentUser?.resume?.originalName && (
+                  <a
+                    href={userService.getResumeDownloadUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-white hover:bg-slate-100 border border-slate-200 font-semibold text-xs text-navy-900 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Download</span>
+                  </a>
+                )}
+                <Link to="/profile/resume">
+                  <Button variant="outline" size="sm">
+                    {currentUser?.resume?.originalName ? 'Manage Resume' : 'Upload Resume'}
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </Card>
         </main>
       </div>

@@ -26,40 +26,45 @@ export default function AlumniDirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [department, setDepartment] = useState('');
   const [batch, setBatch] = useState('');
+  const [degree, setDegree] = useState('');
   const [alumni, setAlumni] = useState<AlumniListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const fetchAlumni = useCallback(async (searchQuery: string, dept: string, batchYear: string, pageNum: number) => {
-    setIsLoading(true);
-    try {
-      const res = await alumniService.listAlumni({
-        search: searchQuery || undefined,
-        department: dept || undefined,
-        batch: batchYear || undefined,
-        page: pageNum,
-        limit: 12,
-      });
-      setAlumni(res.data.data.alumni || []);
-      setTotal(res.data.data.pagination.total);
-      setTotalPages(res.data.data.pagination.totalPages);
-    } catch (err) {
-      console.error('Failed to load alumni directory:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetchAlumni = useCallback(
+    async (searchQuery: string, dept: string, batchYear: string, degreeVal: string, pageNum: number) => {
+      setIsLoading(true);
+      try {
+        const res = await alumniService.listAlumni({
+          search: searchQuery || undefined,
+          department: dept || undefined,
+          batch: batchYear || undefined,
+          degree: degreeVal || undefined,
+          page: pageNum,
+          limit: 12,
+        });
+        setAlumni(res.data.data.alumni || []);
+        setTotal(res.data.data.pagination.total);
+        setTotalPages(res.data.data.pagination.totalPages);
+      } catch (err) {
+        console.error('Failed to load alumni directory:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   // Debounced search effect (350ms)
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchAlumni(searchTerm, department, batch, page);
+      fetchAlumni(searchTerm, department, batch, degree, page);
     }, 350);
 
     return () => clearTimeout(handler);
-  }, [searchTerm, department, batch, page, fetchAlumni]);
+  }, [searchTerm, department, batch, degree, page, fetchAlumni]);
 
   const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setDepartment(e.target.value);
@@ -68,6 +73,11 @@ export default function AlumniDirectoryPage() {
 
   const handleBatchChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setBatch(e.target.value);
+    setPage(1);
+  };
+
+  const handleDegreeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setDegree(e.target.value);
     setPage(1);
   };
 
@@ -85,10 +95,10 @@ export default function AlumniDirectoryPage() {
         <div className="bg-white p-4 sm:p-6 rounded-card border border-slate-200 shadow-xs space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
             {/* Search Input */}
-            <div className="sm:col-span-6">
+            <div className="sm:col-span-12 lg:col-span-3">
               <Input
                 id="searchAlumni"
-                placeholder="Search by name, company, job title, skills..."
+                placeholder="Search by name, skills..."
                 leftIcon={<Search className="w-4 h-4 text-slate-400" />}
                 value={searchTerm}
                 onChange={(e) => {
@@ -99,7 +109,7 @@ export default function AlumniDirectoryPage() {
             </div>
 
             {/* Department Filter */}
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-4 lg:col-span-3">
               <Select
                 id="filterDept"
                 value={department}
@@ -116,8 +126,26 @@ export default function AlumniDirectoryPage() {
               />
             </div>
 
+            {/* Degree Filter */}
+            <div className="sm:col-span-4 lg:col-span-3">
+              <Select
+                id="filterDegree"
+                value={degree}
+                onChange={handleDegreeChange}
+                options={[
+                  { value: '', label: 'All Degrees' },
+                  { value: 'B.Tech', label: 'B.Tech / Bachelor of Technology' },
+                  { value: 'M.Tech', label: 'M.Tech / Master of Technology' },
+                  { value: 'B.S.', label: 'B.S. / Bachelor of Science' },
+                  { value: 'M.S.', label: 'M.S. / Master of Science' },
+                  { value: 'MBA', label: 'MBA' },
+                  { value: 'Ph.D', label: 'Ph.D' },
+                ]}
+              />
+            </div>
+
             {/* Batch Filter */}
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-4 lg:col-span-3">
               <Select
                 id="filterBatch"
                 value={batch}
@@ -141,13 +169,14 @@ export default function AlumniDirectoryPage() {
               Showing <strong className="text-navy-900">{alumni.length}</strong> of{' '}
               <strong className="text-navy-900">{total}</strong> verified graduates
             </span>
-            {(searchTerm || department || batch) && (
+            {(searchTerm || department || batch || degree) && (
               <button
                 type="button"
                 onClick={() => {
                   setSearchTerm('');
                   setDepartment('');
                   setBatch('');
+                  setDegree('');
                   setPage(1);
                 }}
                 className="text-blue-600 hover:underline font-semibold"

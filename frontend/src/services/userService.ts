@@ -26,11 +26,12 @@ export interface ProfileUpdatePayload {
 }
 
 export const userService = {
-  getMe: () => api.get<{ success: boolean; data: { user: User; profileCompletion: number } }>('/users/me'),
-  
+  getMe: () =>
+    api.get<{ success: boolean; data: { user: User; profileCompletion: number; hasResume?: boolean } }>('/users/me'),
+
   updateProfile: (data: ProfileUpdatePayload) =>
-    api.patch<{ success: boolean; data: { user: User; profileCompletion: number } }>('/users/me', data),
-  
+    api.patch<{ success: boolean; data: { user: User; profileCompletion: number; hasResume?: boolean } }>('/users/me', data),
+
   uploadPhoto: (file: File) => {
     const formData = new FormData();
     formData.append('photo', file);
@@ -38,6 +39,23 @@ export const userService = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+
+  uploadResume: (file: File) => {
+    const formData = new FormData();
+    formData.append('resume', file);
+    return api.post<{ success: boolean; data: { resume: { originalName: string; mimeType: string; size: number; uploadedAt: string } } }>(
+      '/users/me/resume',
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
+  },
+
+  deleteResume: () =>
+    api.delete<{ success: boolean; data: { message: string } }>('/users/me/resume'),
+
+  getResumeDownloadUrl: (userId?: string) => `/api/v1/users/${userId || 'me'}/resume`,
 
   changePassword: (data: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
     api.post<{ success: boolean; data: { message: string } }>('/auth/change-password', data),

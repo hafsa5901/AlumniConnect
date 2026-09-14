@@ -20,6 +20,8 @@ import {
   ArrowLeft,
   Mail,
   Globe,
+  FileText,
+  Download,
 } from 'lucide-react';
 
 export default function AlumniProfilePage() {
@@ -146,22 +148,35 @@ export default function AlumniProfilePage() {
             </div>
           </div>
 
-          {/* Links Row */}
-          {alumni.links && Object.keys(alumni.links).length > 0 && (
-            <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-3 text-xs">
-              {Object.entries(alumni.links).map(([key, url]) => (
+          {/* Links & Resume Row */}
+          {((alumni.links && Object.keys(alumni.links).length > 0) || (alumni.hasResume || alumni.resume)) && (
+            <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3 text-xs">
+              {(alumni.hasResume || alumni.resume) && (
                 <a
-                  key={key}
-                  href={url}
+                  href={`/api/v1/users/${alumni.id}/resume`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-slate-50 hover:bg-slate-100 border border-slate-200 font-semibold text-navy-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-btn bg-navy-900 hover:bg-navy-800 text-white font-semibold transition-colors shadow-xs"
                 >
-                  <Globe className="w-3.5 h-3.5 text-slate-500" />
-                  <span className="capitalize">{key}</span>
-                  <ExternalLink className="w-3 h-3 text-slate-400" />
+                  <FileText className="w-3.5 h-3.5 text-blue-300" />
+                  <span>Download Resume / CV</span>
+                  <Download className="w-3 h-3 ml-0.5" />
                 </a>
-              ))}
+              )}
+              {alumni.links &&
+                Object.entries(alumni.links).map(([key, url]) => (
+                  <a
+                    key={key}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-slate-50 hover:bg-slate-100 border border-slate-200 font-semibold text-navy-900 transition-colors"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="capitalize">{key}</span>
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                  </a>
+                ))}
             </div>
           )}
         </Card>
