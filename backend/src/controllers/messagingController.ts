@@ -3,6 +3,7 @@ import mongoose, { Types } from 'mongoose';
 import Conversation from '../models/Conversation';
 import Message from '../models/Message';
 import MentorshipRequest from '../models/MentorshipRequest';
+import ConnectionRequest from '../models/ConnectionRequest';
 import User, { IUser, SAFE_USER_FIELDS } from '../models/User';
 import AdminAuditLog from '../models/AdminAuditLog';
 import { createError } from '../middleware/errorHandler';
@@ -58,20 +59,35 @@ export async function getEligibleContacts(req: Request, res: Response): Promise<
     return;
   }
 
-  // Non-admin user: Gated on accepted MentorshipRequests
-  const acceptedRequests = await MentorshipRequest.find({
-    status: 'accepted',
-    $or: [{ student: currentUserId }, { mentor: currentUserId }],
-  }).select('student mentor');
+  // Non-admin user: Gated on accepted MentorshipRequests OR accepted ConnectionRequests
+  const [acceptedMentorships, acceptedConnections] = await Promise.all([
+    MentorshipRequest.find({
+      status: 'accepted',
+      $or: [{ student: currentUserId }, { mentor: currentUserId }],
+    }).select('student mentor'),
+    ConnectionRequest.find({
+      status: 'accepted',
+      $or: [{ requester: currentUserId }, { recipient: currentUserId }],
+    }).select('requester recipient'),
+  ]);
 
   const counterpartIds = new Set<string>();
-  for (const reqItem of acceptedRequests) {
+  for (const reqItem of acceptedMentorships) {
     const studentStr = reqItem.student.toString();
     const mentorStr = reqItem.mentor.toString();
     if (studentStr === currentUserId.toString()) {
       counterpartIds.add(mentorStr);
     } else {
       counterpartIds.add(studentStr);
+    }
+  }
+  for (const connItem of acceptedConnections) {
+    const reqStr = connItem.requester.toString();
+    const recStr = connItem.recipient.toString();
+    if (reqStr === currentUserId.toString()) {
+      counterpartIds.add(recStr);
+    } else {
+      counterpartIds.add(reqStr);
     }
   }
 
@@ -178,19 +194,28 @@ export async function createConversation(req: Request, res: Response): Promise<v
     throw createError('Recipient account is suspended or inactive.', 403, 'RECIPIENT_INACTIVE');
   }
 
-  // Eligibility check: non-admin requires an accepted MentorshipRequest
+  // Eligibility check: non-admin requires an accepted MentorshipRequest OR accepted ConnectionRequest
   if (currentUserRole !== 'admin') {
-    const hasAcceptedMentorship = await MentorshipRequest.exists({
-      status: 'accepted',
-      $or: [
-        { student: currentUserId, mentor: recipient._id },
-        { student: recipient._id, mentor: currentUserId },
-      ],
-    });
+    const [hasAcceptedMentorship, hasAcceptedConnection] = await Promise.all([
+      MentorshipRequest.exists({
+        status: 'accepted',
+        $or: [
+          { student: currentUserId, mentor: recipient._id },
+          { student: recipient._id, mentor: currentUserId },
+        ],
+      }),
+      ConnectionRequest.exists({
+        status: 'accepted',
+        $or: [
+          { requester: currentUserId, recipient: recipient._id },
+          { requester: recipient._id, recipient: currentUserId },
+        ],
+      }),
+    ]);
 
-    if (!hasAcceptedMentorship) {
+    if (!hasAcceptedMentorship && !hasAcceptedConnection) {
       throw createError(
-        'Messaging is only available between students and alumni with an accepted mentorship.',
+        'Messaging is only available between users with an accepted connection or mentorship.',
         403,
         'NOT_MESSAGING_ELIGIBLE'
       );

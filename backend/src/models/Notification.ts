@@ -11,9 +11,12 @@ export type NotificationType =
   | 'job_removed_by_admin'
   | 'referral_request_received'
   | 'referral_request_accepted'
-  | 'referral_request_rejected';
+  | 'referral_request_rejected'
+  | 'connection_request_received'
+  | 'connection_request_accepted'
+  | 'connection_request_rejected';
 
-export type RelatedEntityType = 'mentorship' | 'message' | 'conversation' | 'event' | 'job' | 'user' | 'referral';
+export type RelatedEntityType = 'mentorship' | 'message' | 'conversation' | 'event' | 'job' | 'user' | 'referral' | 'connection';
 
 export interface INotification extends Document {
   _id: Types.ObjectId;
@@ -51,6 +54,9 @@ const NotificationSchema = new Schema<INotification>(
         'referral_request_received',
         'referral_request_accepted',
         'referral_request_rejected',
+        'connection_request_received',
+        'connection_request_accepted',
+        'connection_request_rejected',
       ],
       required: [true, 'Notification type is required'],
     },
@@ -72,7 +78,7 @@ const NotificationSchema = new Schema<INotification>(
     },
     relatedEntityType: {
       type: String,
-      enum: ['mentorship', 'message', 'conversation', 'event', 'job', 'user', 'referral'],
+      enum: ['mentorship', 'message', 'conversation', 'event', 'job', 'user', 'referral', 'connection'],
     },
     relatedEntityId: {
       type: Schema.Types.ObjectId,

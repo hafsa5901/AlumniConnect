@@ -49,6 +49,9 @@ const AdminAuditLogsPage     = lazy(() => import('./pages/admin/AdminAuditLogsPa
 // Phase 5A: Real-Time Messaging
 const MessagesPage           = lazy(() => import('./pages/messages/MessagesPage'));
 
+// Phase 5E: Professional Network
+const MyNetworkPage          = lazy(() => import('./pages/network/MyNetworkPage'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -161,6 +164,16 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <MessagesPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Phase 5E: Professional Network */}
+              <Route
+                path="/network"
+                element={
+                  <ProtectedRoute>
+                    <MyNetworkPage />
                   </ProtectedRoute>
                 }
               />

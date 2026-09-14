@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Users,
+  UserCheck,
   Calendar,
   Briefcase,
   MessageSquare,
@@ -24,6 +25,7 @@ export interface NavItemConfig {
 export const navigationConfig: Record<Role, NavItemConfig[]> = {
   student: [
     { label: 'Overview', href: '/dashboard/student', icon: LayoutDashboard },
+    { label: 'My Network', href: '/network', icon: UserCheck },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
     { label: 'Events', href: '/events', icon: Calendar },
     { label: 'Jobs & Referrals', href: '/jobs', icon: Briefcase },
@@ -34,6 +36,7 @@ export const navigationConfig: Record<Role, NavItemConfig[]> = {
   ],
   alumni: [
     { label: 'Overview', href: '/dashboard/alumni', icon: LayoutDashboard },
+    { label: 'My Network', href: '/network', icon: UserCheck },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
     { label: 'Events', href: '/events', icon: Calendar },
     { label: 'Jobs & Referrals', href: '/jobs', icon: Briefcase },
@@ -44,6 +47,7 @@ export const navigationConfig: Record<Role, NavItemConfig[]> = {
   ],
   admin: [
     { label: 'Overview', href: '/dashboard/admin', icon: LayoutDashboard },
+    { label: 'My Network', href: '/network', icon: UserCheck },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
     { label: 'Verification Queue', href: '/admin/verification', icon: ShieldAlert },
     { label: 'Event Approvals', href: '/admin/events', icon: Calendar },

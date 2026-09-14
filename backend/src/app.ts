@@ -16,6 +16,7 @@ import mentorshipRouter from './routes/mentorship';
 import messagingRouter from './routes/messaging';
 import notificationsRouter from './routes/notifications';
 import referralsRouter from './routes/referrals';
+import connectionsRouter from './routes/connections';
 
 const app = express();
 
@@ -66,17 +67,18 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // ── API v1 routes ─────────────────────────────────────────────────────────────
-app.use('/api/v1/auth',      authRouter);
-app.use('/api/v1/admin',     adminRouter);
-app.use('/api/v1/users',     usersRouter);
-app.use('/api/v1/dashboard', dashboardRouter);
-app.use('/api/v1/alumni',    alumniRouter);
-app.use('/api/v1/events',     eventsRouter);
-app.use('/api/v1/jobs',       jobsRouter);
-app.use('/api/v1/mentorship', mentorshipRouter);
-app.use('/api/v1/messaging',  messagingRouter);
+app.use('/api/v1/auth',        authRouter);
+app.use('/api/v1/admin',       adminRouter);
+app.use('/api/v1/users',       usersRouter);
+app.use('/api/v1/dashboard',   dashboardRouter);
+app.use('/api/v1/alumni',      alumniRouter);
+app.use('/api/v1/events',       eventsRouter);
+app.use('/api/v1/jobs',         jobsRouter);
+app.use('/api/v1/mentorship',   mentorshipRouter);
+app.use('/api/v1/messaging',    messagingRouter);
 app.use('/api/v1/notifications', notificationsRouter);
-app.use('/api/v1/referrals',  referralsRouter);
+app.use('/api/v1/referrals',    referralsRouter);
+app.use('/api/v1/connections',  connectionsRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {
