@@ -10,6 +10,9 @@ const router = Router();
 router.use(authenticate, requireRole('admin'));
 
 router.get('/dashboard',               adminController.getDashboardStats);
+router.get('/analytics/overview',      adminController.getAnalyticsOverview);
+router.get('/analytics/activity',      adminController.getAnalyticsActivity);
+router.post('/users/bulk-action',      adminController.bulkUserAction);
 router.get('/users',                   adminController.listUsers);
 router.get('/users/:id',               adminController.getUserById);
 router.patch('/users/:id/approve',     adminController.approveUser);

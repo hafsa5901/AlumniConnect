@@ -8,6 +8,10 @@ export type AuditAction =
   | 'user.delete'
   | 'user.create_admin'
   | 'user.role_change'
+  | 'user.bulk_approve'
+  | 'user.bulk_reject'
+  | 'user.bulk_suspend'
+  | 'user.bulk_reactivate'
   | 'event.approve'
   | 'event.reject'
   | 'event.cancel'
@@ -30,8 +34,9 @@ const AdminAuditLogSchema = new Schema<IAdminAuditLog>(
       type: String,
       enum: [
         'user.approve', 'user.reject', 'user.suspend', 'user.reactivate',
-        'user.delete', 'user.create_admin', 'user.role_change', 'event.approve', 'event.reject',
-        'event.cancel', 'job.remove', 'admin_initiated_conversation',
+        'user.delete', 'user.create_admin', 'user.role_change',
+        'user.bulk_approve', 'user.bulk_reject', 'user.bulk_suspend', 'user.bulk_reactivate',
+        'event.approve', 'event.reject', 'event.cancel', 'job.remove', 'admin_initiated_conversation',
       ] satisfies AuditAction[],
       required: true,
     },
