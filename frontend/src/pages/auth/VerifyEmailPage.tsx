@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
-import { CheckCircle2, XCircle, ArrowRight, Loader2 } from 'lucide-react';
-import { Button, Card } from '../../components/ui';
+import { CheckCircle2, XCircle, ArrowRight, Loader2, Mail, RefreshCw, Clock } from 'lucide-react';
+import { Button, Card, Input } from '../../components/ui';
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
@@ -12,6 +12,16 @@ export default function VerifyEmailPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [verifiedUser, setVerifiedUser] = useState<any>(null);
+
+  // Resend state
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [resendError, setResendError] = useState('');
+
+  const isExpired =
+    errorMessage.toLowerCase().includes('expired') ||
+    errorMessage.toLowerCase().includes('expire');
 
   useEffect(() => {
     if (!token) {
@@ -28,15 +38,36 @@ export default function VerifyEmailPage() {
       })
       .catch((err) => {
         setIsSuccess(false);
-        setErrorMessage(
+        const msg =
           err?.response?.data?.error?.message ||
-            'Verification link is invalid or has expired.'
-        );
+          'Verification link is invalid or has expired.';
+        setErrorMessage(msg);
       })
       .finally(() => {
         setIsLoading(false);
       });
   }, [token]);
+
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resendEmail || !resendEmail.includes('@')) {
+      setResendError('Please enter a valid email address.');
+      return;
+    }
+
+    setResendLoading(true);
+    setResendError('');
+    try {
+      await authService.resendVerification(resendEmail.trim().toLowerCase());
+      setResendSuccess(true);
+    } catch (err: any) {
+      setResendError(
+        err?.response?.data?.error?.message || 'Failed to send verification email. Please try again.'
+      );
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
@@ -88,17 +119,81 @@ export default function VerifyEmailPage() {
                 </Link>
               </div>
             </div>
+          ) : isExpired ? (
+            /* Expired Link State — Prominent Resend Option */
+            <div className="py-4 space-y-5 animate-fade-in text-left">
+              <div className="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-600">
+                <Clock className="w-8 h-8" />
+              </div>
+
+              <div className="text-center">
+                <h1 className="text-2xl font-extrabold text-navy-900">Link Expired</h1>
+                <p className="text-xs text-amber-700 mt-2 font-medium">
+                  {errorMessage}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  For your security, verification links expire 24 hours after being issued.
+                </p>
+              </div>
+
+              {resendSuccess ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center space-y-2">
+                  <CheckCircle2 className="w-6 h-6 text-green-600 mx-auto" />
+                  <p className="text-xs font-semibold text-green-900">Verification Link Sent</p>
+                  <p className="text-xs text-green-700">
+                    If an unverified account exists for this address, a new 24-hour verification link was dispatched to your inbox.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleResend} className="space-y-4 pt-2">
+                  <Input
+                    label="Registered Email Address"
+                    type="email"
+                    placeholder="you@college.edu"
+                    value={resendEmail}
+                    onChange={(e) => setResendEmail(e.target.value)}
+                    error={resendError}
+                    leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+                    required
+                  />
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="md"
+                    className="w-full justify-center"
+                    isLoading={resendLoading}
+                    leftIcon={<RefreshCw className="w-4 h-4" />}
+                  >
+                    Resend Verification Link
+                  </Button>
+                </form>
+              )}
+
+              <div className="pt-2 flex gap-3 text-center">
+                <Link to="/login" className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full justify-center text-xs">
+                    Back to Login
+                  </Button>
+                </Link>
+                <Link to="/register" className="flex-1">
+                  <Button variant="ghost" size="sm" className="w-full justify-center text-xs text-slate-600">
+                    Create New Account
+                  </Button>
+                </Link>
+              </div>
+            </div>
           ) : (
+            /* Invalid / Already Used Link State */
             <div className="py-4 space-y-5 animate-fade-in">
               <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-600">
                 <XCircle className="w-8 h-8" />
               </div>
 
               <div>
-                <h1 className="text-2xl font-extrabold text-navy-900">Verification Failed</h1>
+                <h1 className="text-2xl font-extrabold text-navy-900">Invalid Verification Link</h1>
                 <p className="text-xs text-red-600 mt-2 font-medium">{errorMessage}</p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Verification links expire after 24 hours.
+                  This link is malformed or has already been used to verify your account.
                 </p>
               </div>
 

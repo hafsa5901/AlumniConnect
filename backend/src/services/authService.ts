@@ -161,6 +161,26 @@ export async function verifyEmail(rawToken: string): Promise<ReturnType<typeof s
   return safeUser(user);
 }
 
+// ── Resend verification email ────────────────────────────────────────────────
+export async function resendVerificationEmail(email: string): Promise<void> {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ email: normalizedEmail }).select('+verificationTokenHash +verificationTokenExpires');
+
+  // Generic silent return if user does not exist or is already verified
+  if (!user || user.verificationStatus !== 'pending') {
+    return;
+  }
+
+  const { raw, hash, expires } = generateSecureToken(VERIFICATION_TOKEN_TTL);
+  user.verificationTokenHash = hash;
+  user.verificationTokenExpires = expires;
+  await user.save();
+
+  sendVerificationEmail(user.email, user.name, raw).catch((err) =>
+    console.error('[RESEND_VERIFICATION] Failed to send email:', err)
+  );
+}
+
 // ── Login ─────────────────────────────────────────────────────────────────────
 export async function loginUser(input: LoginInput): Promise<{
   user: ReturnType<typeof safeUser>;

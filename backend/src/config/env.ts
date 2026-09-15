@@ -36,6 +36,14 @@ export function validateStartupConfig(): { valid: boolean; errors: string[] } {
     errors.push('MONGODB_URI must be a valid MongoDB connection string starting with mongodb:// or mongodb+srv://');
   }
 
+  if (process.env.NODE_ENV === 'production' && (process.env.REQUIRE_PROD_EMAIL === 'true' || process.env.SMTP_REQUIRED === 'true')) {
+    const hasSmtp = Boolean(process.env.SMTP_HOST && (process.env.SMTP_USER || process.env.EMAIL_USER) && (process.env.SMTP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD));
+    const hasService = Boolean(process.env.EMAIL_SERVICE && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
+    if (!hasSmtp && !hasService) {
+      errors.push('Production SMTP configuration (SMTP_HOST, SMTP_USER, SMTP_PASSWORD) or EMAIL_SERVICE credentials are required in production.');
+    }
+  }
+
   return {
     valid: errors.length === 0,
     errors,
@@ -50,14 +58,20 @@ export const env = {
   JWT_REFRESH_SECRET: requireEnv('JWT_REFRESH_SECRET'),
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
+  APP_BASE_URL: process.env.APP_BASE_URL || process.env.CLIENT_URL || 'http://localhost:5173',
+  CLIENT_URL: process.env.APP_BASE_URL || process.env.CLIENT_URL || 'http://localhost:5173',
   COLLEGE_EMAIL_DOMAINS: (process.env.COLLEGE_EMAIL_DOMAINS || 'college.edu,university.edu')
     .split(',')
     .map((d) => d.trim().toLowerCase()),
   STUDENT_REQUIRES_ADMIN_APPROVAL: process.env.STUDENT_REQUIRES_ADMIN_APPROVAL === 'true',
-  EMAIL_SERVICE: process.env.EMAIL_SERVICE || 'ethereal',
-  EMAIL_USER: process.env.EMAIL_USER || '',
-  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || '',
+  SMTP_HOST: process.env.SMTP_HOST || '',
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || '587', 10),
+  SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+  SMTP_USER: process.env.SMTP_USER || process.env.EMAIL_USER || '',
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD || '',
+  EMAIL_SERVICE: process.env.EMAIL_SERVICE || '',
+  EMAIL_USER: process.env.SMTP_USER || process.env.EMAIL_USER || '',
+  EMAIL_PASSWORD: process.env.SMTP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD || '',
   EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@alumniconnect.local',
   FILE_STORAGE_DRIVER: (process.env.FILE_STORAGE_DRIVER || 'local') as 'local' | 's3',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || '',

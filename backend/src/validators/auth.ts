@@ -59,6 +59,20 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+// ── Resend verification ────────────────────────────────────────────────────────
+export const resendVerificationSchema = z.object({
+  email: emailSchema,
+});
+
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
+
+// ── Verify email ──────────────────────────────────────────────────────────────
+export const verifyEmailSchema = z.object({
+  token: z.string({ required_error: 'Verification token is required.' }).min(1, 'Verification token is required.'),
+});
+
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
 // ── Forgot password ────────────────────────────────────────────────────────────
 export const forgotPasswordSchema = z.object({
   email: emailSchema,

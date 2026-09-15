@@ -9,6 +9,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
+  resendVerificationSchema,
 } from '../validators/auth';
 import * as authController from '../controllers/authController';
 
@@ -53,15 +54,17 @@ function makeUserRateLimiter(max: number, windowMs: number, code = 'RATE_LIMITED
 const loginLimiter          = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
 const registerLimiter       = makeRateLimiter(10,  60 * 60 * 1000); // 10/hr
 const forgotLimiter         = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
+const resendLimiter         = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
 const changePasswordLimiter = makeUserRateLimiter(5,  15 * 60 * 1000); // 5/15min per user
 
 // ── Public routes ─────────────────────────────────────────────────────────────
-router.post('/register',        registerLimiter, validate(registerSchema),       authController.register);
-router.post('/login',           loginLimiter,    validate(loginSchema),           authController.login);
-router.post('/verify-email',                                                      authController.verifyEmail);
-router.post('/forgot-password', forgotLimiter,   validate(forgotPasswordSchema),  authController.forgotPassword);
-router.post('/reset-password',                   validate(resetPasswordSchema),   authController.resetPassword);
-router.post('/refresh',                                                           authController.refresh);
+router.post('/register',            registerLimiter, validate(registerSchema),           authController.register);
+router.post('/login',               loginLimiter,    validate(loginSchema),               authController.login);
+router.post('/verify-email',                                                              authController.verifyEmail);
+router.post('/resend-verification', resendLimiter,   validate(resendVerificationSchema),  authController.resendVerification);
+router.post('/forgot-password',     forgotLimiter,   validate(forgotPasswordSchema),      authController.forgotPassword);
+router.post('/reset-password',                       validate(resetPasswordSchema),       authController.resetPassword);
+router.post('/refresh',                                                                   authController.refresh);
 
 // ── Protected routes ──────────────────────────────────────────────────────────
 router.post('/logout',          authenticate, authController.logout);

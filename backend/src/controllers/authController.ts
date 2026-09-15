@@ -54,6 +54,16 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   res.json({ success: true, data: { user, message: 'Email verified successfully.' } });
 });
 
+// ── POST /api/v1/auth/resend-verification ─────────────────────────────────────
+export const resendVerification = asyncHandler(async (req: Request, res: Response) => {
+  await authService.resendVerificationEmail(req.body.email);
+  // Always identical enumeration-resistant response
+  res.json({
+    success: true,
+    data: { message: 'If an unverified account exists with this email, a new verification link has been sent.' },
+  });
+});
+
 // ── POST /api/v1/auth/forgot-password ────────────────────────────────────────
 export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
   await authService.forgotPassword(req.body.email);
