@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, PublicOnlyRoute } from './routes/ProtectedRoute';
+import ErrorBoundary from './components/feedback/ErrorBoundary';
 
 // Lazy-loaded pages
 const LandingPage            = lazy(() => import('./pages/LandingPage'));
@@ -52,6 +53,9 @@ const MessagesPage           = lazy(() => import('./pages/messages/MessagesPage'
 // Phase 5E: Professional Network
 const MyNetworkPage          = lazy(() => import('./pages/network/MyNetworkPage'));
 
+// Phase 5F: Operations Analytics & Bulk Governance
+const AdminAnalyticsPage     = lazy(() => import('./pages/admin/AdminAnalyticsPage'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -74,8 +78,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               {/* Public */}
               <Route path="/" element={<LandingPage />} />
               <Route
@@ -257,6 +262,14 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/admin/analytics"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminAnalyticsPage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* User Profile & Settings */}
               <Route
@@ -296,6 +309,7 @@ export default function App() {
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
+        </ErrorBoundary>
 
           {/* Global toast notifications */}
           <Toaster

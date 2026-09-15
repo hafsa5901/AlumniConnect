@@ -6,10 +6,40 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 function requireEnv(key: string): string {
   const value = process.env[key];
-  if (!value) {
+  if (!value || value.trim() === '') {
     throw new Error(`Missing required environment variable: ${key}`);
   }
-  return value;
+  return value.trim();
+}
+
+export function validateStartupConfig(): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  const accessSecret = process.env.JWT_ACCESS_SECRET;
+  if (!accessSecret || accessSecret.trim() === '') {
+    errors.push('JWT_ACCESS_SECRET is required');
+  } else if (accessSecret.length < 16) {
+    errors.push('JWT_ACCESS_SECRET must be at least 16 characters');
+  }
+
+  const refreshSecret = process.env.JWT_REFRESH_SECRET;
+  if (!refreshSecret || refreshSecret.trim() === '') {
+    errors.push('JWT_REFRESH_SECRET is required');
+  } else if (refreshSecret.length < 16) {
+    errors.push('JWT_REFRESH_SECRET must be at least 16 characters');
+  }
+
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri || mongoUri.trim() === '') {
+    errors.push('MONGODB_URI is required');
+  } else if (!mongoUri.startsWith('mongodb://') && !mongoUri.startsWith('mongodb+srv://')) {
+    errors.push('MONGODB_URI must be a valid MongoDB connection string starting with mongodb:// or mongodb+srv://');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
 }
 
 export const env = {
@@ -35,4 +65,3 @@ export const env = {
   // Rate limit overrides for test environments
   AUTH_RATE_LIMIT_DISABLED: process.env.AUTH_RATE_LIMIT_DISABLED === 'true',
 };
-

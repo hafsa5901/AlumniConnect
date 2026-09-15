@@ -57,7 +57,7 @@ export const navigationConfig: Record<Role, NavItemConfig[]> = {
     { label: 'Audit Logs', href: '/admin/audit', icon: FileText },
     { label: 'Alumni Directory', href: '/alumni', icon: Users },
     { label: 'Settings', href: '/settings', icon: Settings },
-    { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, disabled: true },
+    { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   ],
 };
 

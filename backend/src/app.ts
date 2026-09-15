@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env';
 import { errorHandler, createError } from './middleware/errorHandler';
+import { globalApiRateLimiter } from './middleware/globalRateLimiter';
 import authRouter from './routes/auth';
 import adminRouter from './routes/admin';
 import usersRouter from './routes/users';
@@ -65,6 +66,9 @@ app.get('/api/health', (_req: Request, res: Response) => {
     },
   });
 });
+
+// ── Global API Rate Limiter ──────────────────────────────────────────────────
+app.use('/api', globalApiRateLimiter);
 
 // ── API v1 routes ─────────────────────────────────────────────────────────────
 app.use('/api/v1/auth',        authRouter);
