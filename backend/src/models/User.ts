@@ -37,11 +37,15 @@ export interface IUser extends Document {
   role: Role;
   accountStatus: AccountStatus;
   verificationStatus: VerificationStatus;
+  // College verification fields
+  college?: mongoose.Types.ObjectId;
+  collegeDomainVerified: boolean;
+  adminCollege?: mongoose.Types.ObjectId;
   // Alumni non-institutional proof
   verificationNote?: string;
   verificationDocUrl?: string;
   rejectionReason?: string;
-  // Institution info
+  // Institution info (legacy + current)
   institution?: string;
   department?: string;
   batch?: string;
@@ -141,6 +145,11 @@ const UserSchema = new Schema<IUser>(
       required: true,
       index: true,
     },
+
+    // College master data relationship & domain verification flag
+    college: { type: Schema.Types.ObjectId, ref: 'College', default: null, index: true },
+    collegeDomainVerified: { type: Boolean, default: false, index: true },
+    adminCollege: { type: Schema.Types.ObjectId, ref: 'College', default: null },
 
     verificationNote: { type: String, trim: true, select: false },   // alumni proof text
     verificationDocUrl: { type: String, trim: true, select: false },  // alumni proof doc

@@ -3,7 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { VerificationStatus } from '../../components/feedback/VerificationStatus';
 import { Button, Card } from '../../components/ui';
-import { LogOut, ArrowRight, Home } from 'lucide-react';
+import { LogOut, ArrowRight, Home, Building2 } from 'lucide-react';
 
 export default function VerificationStatusPage() {
   const { user, logout } = useAuth();
@@ -73,6 +73,24 @@ export default function VerificationStatusPage() {
               <span className="text-slate-500">Assigned Role:</span>
               <span className="capitalize font-bold text-navy-900">{routeUser?.role}</span>
             </div>
+          </div>
+
+          {/* Complete Institutional Verification Flow CTA */}
+          <div className="bg-navy-50/60 rounded-card p-4 border border-navy-100 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <p className="text-xs font-bold text-navy-900 flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-navy-700" />
+                Institutional Verification
+              </p>
+              <p className="text-[11px] text-slate-600">
+                Link your official college/university affiliation or provide proof documents.
+              </p>
+            </div>
+            <Link to="/verification/institutional" className="flex-shrink-0 w-full sm:w-auto">
+              <Button variant="primary" size="sm" className="text-xs w-full sm:w-auto">
+                {currentStatus === 'rejected' ? 'Resubmit Proof' : 'Verify Affiliation'}
+              </Button>
+            </Link>
           </div>
 
           {/* Action Buttons */}

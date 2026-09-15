@@ -12,6 +12,10 @@ export type AuditAction =
   | 'user.bulk_reject'
   | 'user.bulk_suspend'
   | 'user.bulk_reactivate'
+  | 'verification.approve'
+  | 'verification.reject'
+  | 'college.create'
+  | 'college.update'
   | 'event.approve'
   | 'event.reject'
   | 'event.cancel'
@@ -21,7 +25,7 @@ export type AuditAction =
 export interface IAdminAuditLog extends Document {
   admin: mongoose.Types.ObjectId;
   action: AuditAction;
-  targetType: 'user' | 'event' | 'job' | 'conversation';
+  targetType: 'user' | 'event' | 'job' | 'conversation' | 'verification_request' | 'college';
   targetId: mongoose.Types.ObjectId;
   metadata: Record<string, unknown>;
   createdAt: Date;
@@ -36,11 +40,13 @@ const AdminAuditLogSchema = new Schema<IAdminAuditLog>(
         'user.approve', 'user.reject', 'user.suspend', 'user.reactivate',
         'user.delete', 'user.create_admin', 'user.role_change',
         'user.bulk_approve', 'user.bulk_reject', 'user.bulk_suspend', 'user.bulk_reactivate',
+        'verification.approve', 'verification.reject',
+        'college.create', 'college.update',
         'event.approve', 'event.reject', 'event.cancel', 'job.remove', 'admin_initiated_conversation',
       ] satisfies AuditAction[],
       required: true,
     },
-    targetType: { type: String, enum: ['user', 'event', 'job', 'conversation'], required: true },
+    targetType: { type: String, enum: ['user', 'event', 'job', 'conversation', 'verification_request', 'college'], required: true },
     targetId: { type: Schema.Types.ObjectId, required: true, index: true },
     metadata: { type: Schema.Types.Mixed, default: {} },
   },

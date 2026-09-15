@@ -15,6 +15,7 @@ const VerifyEmailPage        = lazy(() => import('./pages/auth/VerifyEmailPage')
 const ForgotPasswordPage     = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage      = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const VerificationStatusPage = lazy(() => import('./pages/auth/VerificationStatusPage'));
+const InstitutionalVerificationPage = lazy(() => import('./pages/verification/InstitutionalVerificationPage'));
 const UnauthorizedPage       = lazy(() => import('./pages/UnauthorizedPage'));
 const NotFoundPage           = lazy(() => import('./pages/NotFoundPage'));
 
@@ -112,6 +113,14 @@ export default function App() {
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verification-status" element={<VerificationStatusPage />} />
+              <Route
+                path="/verification/institutional"
+                element={
+                  <ProtectedRoute>
+                    <InstitutionalVerificationPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
               {/* Directory & Profiles */}

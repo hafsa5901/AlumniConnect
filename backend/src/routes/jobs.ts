@@ -31,7 +31,7 @@ async function authenticateOptional(
     }
 
     const user = await User.findById(payload.userId).select(
-      '_id name email role accountStatus verificationStatus'
+      '_id name email role accountStatus verificationStatus college collegeDomainVerified'
     );
     if (user && user.accountStatus === 'active') {
       req.user = {
@@ -41,6 +41,8 @@ async function authenticateOptional(
         role: user.role,
         accountStatus: user.accountStatus,
         verificationStatus: user.verificationStatus,
+        college: user.college,
+        collegeDomainVerified: user.collegeDomainVerified,
       };
     }
     next();

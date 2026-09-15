@@ -18,6 +18,8 @@ export interface User {
   accountStatus: AccountStatus;
   verificationStatus: VerificationStatus;
   verificationNote?: string;
+  college?: any;
+  collegeDomainVerified?: boolean;
   institution?: string;
   department?: string;
   batch?: string;

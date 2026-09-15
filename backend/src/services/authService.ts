@@ -29,6 +29,8 @@ function safeUser(user: IUser) {
     role: user.role,
     accountStatus: user.accountStatus,
     verificationStatus: user.verificationStatus,
+    college: user.college,
+    collegeDomainVerified: user.collegeDomainVerified ?? false,
     department: user.department,
     batch: user.batch,
     profilePhotoUrl: user.profilePhotoUrl,

@@ -8,7 +8,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      user?: Pick<IUser, '_id' | 'name' | 'email' | 'role' | 'accountStatus' | 'verificationStatus'>;
+      user?: Pick<IUser, '_id' | 'name' | 'email' | 'role' | 'accountStatus' | 'verificationStatus' | 'college' | 'collegeDomainVerified'>;
     }
   }
 }
@@ -43,7 +43,7 @@ export async function authenticate(
 
     // Load user — only safe fields, no hashes
     const user = await User.findById(payload.userId).select(
-      '_id name email role accountStatus verificationStatus'
+      '_id name email role accountStatus verificationStatus college collegeDomainVerified'
     );
     if (!user) {
       return next(createError('User no longer exists.', 401, 'NOT_AUTHENTICATED'));
@@ -66,6 +66,8 @@ export async function authenticate(
       role: user.role,
       accountStatus: user.accountStatus,
       verificationStatus: user.verificationStatus,
+      college: user.college,
+      collegeDomainVerified: user.collegeDomainVerified ?? false,
     };
 
     next();
