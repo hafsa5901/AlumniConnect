@@ -371,11 +371,30 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
 
 // ── GET /api/v1/admin/dashboard ───────────────────────────────────────────────
 export const getDashboardStats = asyncHandler(async (_req: Request, res: Response) => {
-  const [totalUsers, pendingUsers, approvedAlumni, verifiedStudents] = await Promise.all([
-    User.countDocuments(),
+  const [
+    totalUsers,
+    pendingUsers,
+    approvedAlumni,
+    verifiedStudents,
+    suspendedUsers,
+    totalEvents,
+    pendingEvents,
+    totalJobs,
+    openJobs,
+    pendingReferrals,
+    pendingMentorship,
+  ] = await Promise.all([
+    User.countDocuments({}),
     User.countDocuments({ verificationStatus: 'pending' }),
-    User.countDocuments({ role: 'alumni', verificationStatus: 'admin_approved' }),
-    User.countDocuments({ role: 'student', verificationStatus: { $in: ['email_verified', 'admin_approved'] } }),
+    User.countDocuments({ role: 'alumni', verificationStatus: 'admin_approved', accountStatus: 'active' }),
+    User.countDocuments({ role: 'student', verificationStatus: { $in: ['email_verified', 'admin_approved'] }, accountStatus: 'active' }),
+    User.countDocuments({ accountStatus: 'suspended' }),
+    Event.countDocuments({}),
+    Event.countDocuments({ approvalStatus: 'pending' }),
+    Job.countDocuments({}),
+    Job.countDocuments({ status: 'open' }),
+    ReferralRequest.countDocuments({ status: 'pending' }),
+    MentorshipRequest.countDocuments({ status: 'pending' }),
   ]);
 
   res.json({
@@ -385,8 +404,13 @@ export const getDashboardStats = asyncHandler(async (_req: Request, res: Respons
       pendingUsers,
       approvedAlumni,
       verifiedStudents,
-      totalEvents: 0,
-      totalJobs: 0,
+      suspendedUsers,
+      totalEvents,
+      pendingEvents,
+      totalJobs,
+      openJobs,
+      pendingReferrals,
+      pendingMentorship,
     },
   });
 });

@@ -9,6 +9,7 @@ import ErrorBoundary from './components/feedback/ErrorBoundary';
 // Lazy-loaded pages
 const LandingPage            = lazy(() => import('./pages/LandingPage'));
 const LoginPage              = lazy(() => import('./pages/auth/LoginPage'));
+const AdminLoginPage         = lazy(() => import('./pages/auth/AdminLoginPage'));
 const RegisterPage           = lazy(() => import('./pages/auth/RegisterPage'));
 const VerifyEmailPage        = lazy(() => import('./pages/auth/VerifyEmailPage'));
 const ForgotPasswordPage     = lazy(() => import('./pages/auth/ForgotPasswordPage'));
@@ -88,6 +89,14 @@ export default function App() {
                 element={
                   <PublicOnlyRoute>
                     <LoginPage />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/admin/login"
+                element={
+                  <PublicOnlyRoute>
+                    <AdminLoginPage />
                   </PublicOnlyRoute>
                 }
               />

@@ -30,9 +30,14 @@ async function seedAdmin() {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
 
+  if (process.env.NODE_ENV === 'production' && (!adminEmail || !adminPassword)) {
+    console.error('❌ In production, ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be explicitly defined. Aborting seed.');
+    process.exit(1);
+  }
+
   if (!adminEmail || !adminPassword) {
     console.warn('⚠️  ADMIN_EMAIL or ADMIN_PASSWORD not set in .env.');
-    console.warn('   Using defaults: admin@alumniconnect.local / Admin123456');
+    console.warn('   Using development defaults: admin@alumniconnect.local / Admin123456');
     console.warn('   CHANGE THESE BEFORE GOING TO PRODUCTION.\n');
   }
 
