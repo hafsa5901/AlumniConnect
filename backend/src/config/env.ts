@@ -76,6 +76,7 @@ export const env = {
   FILE_STORAGE_DRIVER: (process.env.FILE_STORAGE_DRIVER || 'local') as 'local' | 's3',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || '',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
+  TRUST_PROXY: process.env.TRUST_PROXY || 'false',
   // Rate limit overrides for test environments
   AUTH_RATE_LIMIT_DISABLED: process.env.AUTH_RATE_LIMIT_DISABLED === 'true',
 };

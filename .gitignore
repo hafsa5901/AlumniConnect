@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 .env
 .env.*
 !.env.example
@@ -14,5 +14,7 @@ build/
 .vite/
 
 *.log
+uploads/
+uploads_private/
 .DS_Store
 Thumbs.db

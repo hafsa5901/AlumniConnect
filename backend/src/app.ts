@@ -23,6 +23,18 @@ import verificationRequestsRouter from './routes/verificationRequests';
 
 const app = express();
 
+// ── Trust Proxy Configuration ────────────────────────────────────────────────
+if (env.TRUST_PROXY && env.TRUST_PROXY !== 'false') {
+  const hopCount = parseInt(env.TRUST_PROXY, 10);
+  if (!isNaN(hopCount)) {
+    app.set('trust proxy', hopCount);
+  } else if (env.TRUST_PROXY === 'true') {
+    app.set('trust proxy', 1);
+  } else {
+    app.set('trust proxy', env.TRUST_PROXY);
+  }
+}
+
 // ── Security headers ─────────────────────────────────────────────────────────
 app.use(helmet());
 
