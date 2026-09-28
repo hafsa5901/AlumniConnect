@@ -79,38 +79,8 @@
 
 ## 4. Environment Variables Reference
 
-### Backend Variables
-
-| Variable Name | Required | Secret? | Purpose | Implementation Location |
-| :--- | :---: | :---: | :--- | :--- |
-| `NODE_ENV` | Yes | No | Runtime mode (`production`, `development`, `test`) | `backend/src/config/env.ts:55` |
-| `PORT` | No | No | Port to listen on (Default: `5000`) | `backend/src/config/env.ts:54` |
-| `MONGODB_URI` | Yes | **Yes** | MongoDB cluster connection string with credentials | `backend/src/config/env.ts:56` |
-| `JWT_ACCESS_SECRET` | Yes | **Yes** | 256-bit secret for signing access JWTs (min 16 chars) | `backend/src/config/env.ts:57` |
-| `JWT_REFRESH_SECRET` | Yes | **Yes** | 256-bit secret for signing refresh JWTs (min 16 chars)| `backend/src/config/env.ts:58` |
-| `JWT_ACCESS_EXPIRES_IN` | No | No | Access token TTL (Default: `15m`) | `backend/src/config/env.ts:59` |
-| `JWT_REFRESH_EXPIRES_IN`| No | No | Refresh token TTL (Default: `7d`) | `backend/src/config/env.ts:60` |
-| `APP_BASE_URL` | Yes | No | Public frontend URL for email links | `backend/src/config/env.ts:61` |
-| `CLIENT_URL` | Yes | No | Origin allowlist for CORS policy | `backend/src/config/env.ts:62` |
-| `COLLEGE_EMAIL_DOMAINS` | No | No | Default comma-separated domain fallbacks | `backend/src/config/env.ts:63` |
-| `STUDENT_REQUIRES_ADMIN_APPROVAL` | No | No | Flag requiring student verification approval | `backend/src/config/env.ts:66` |
-| `SMTP_HOST` | Prod | No | Outgoing SMTP mail server | `backend/src/config/env.ts:67` |
-| `SMTP_PORT` | Prod | No | Outgoing SMTP port (`587`, `465`, `25`) | `backend/src/config/env.ts:68` |
-| `SMTP_SECURE` | No | No | Direct TLS boolean (`true` for 465, `false` for 587) | `backend/src/config/env.ts:69` |
-| `SMTP_USER` | Prod | **Yes** | SMTP authentication username | `backend/src/config/env.ts:70` |
-| `SMTP_PASSWORD` | Prod | **Yes** | SMTP authentication password | `backend/src/config/env.ts:71` |
-| `EMAIL_FROM` | No | No | Sender address header | `backend/src/config/env.ts:75` |
-| `TRUST_PROXY` | No | No | Proxy hop count or boolean (`1`, `false`) | `backend/src/config/env.ts:77` |
-| `FILE_STORAGE_DRIVER` | No | No | File driver (`local`) | `backend/src/config/env.ts:76` |
-
-### Frontend Variables (Public Client-Side)
-
-> Injected at build time by Vite. **Never store server secrets in frontend variables.**
-
-| Variable Name | Required | Secret? | Purpose | Code Location |
-| :--- | :---: | :---: | :--- | :--- |
-| `VITE_API_URL` | Yes | No | Backend API endpoint URL (`https://api.example.com/api/v1`) | `frontend/src/services/api.ts:3` |
-| `VITE_SOCKET_URL` | Yes | No | Backend WebSocket URL (`https://api.example.com`) | `frontend/src/services/messaging.ts:134` |
+> For the comprehensive, authoritative contract of all backend and frontend environment variables, exact parsing rules, default values, secret generation runbooks, and classification matrices, see:  
+> 👉 **[docs/PRODUCTION_ENVIRONMENT.md](file:///c:/Users/Admin/OneDrive/Desktop/alumanti2/docs/PRODUCTION_ENVIRONMENT.md)**
 
 ---
 

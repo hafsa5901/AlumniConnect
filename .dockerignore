@@ -1,0 +1,10 @@
+.git
+node_modules
+frontend/
+.env
+.env.*
+!.env.example
+uploads/
+uploads_private/
+coverage/
+*.log

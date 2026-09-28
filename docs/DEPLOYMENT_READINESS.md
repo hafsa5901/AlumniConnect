@@ -37,40 +37,8 @@ AlumniConnect is a full-stack, institutional alumni and student engagement platf
 
 ### 3. Environment Variable Contract Reference
 
-#### Backend Environment Variables
-
-| Variable Name | Required | Secret? | Purpose | Default / Example |
-| :--- | :---: | :---: | :--- | :--- |
-| `NODE_ENV` | Yes | No | Runtime mode (`production`, `development`, `test`) | `development` |
-| `PORT` | No | No | HTTP listening port | `5000` |
-| `MONGODB_URI` | Yes | **Yes** | Connection URI for MongoDB cluster | `mongodb+srv://...` |
-| `JWT_ACCESS_SECRET` | Yes | **Yes** | HMAC key for access tokens (min 16 chars) | Strong secret string |
-| `JWT_REFRESH_SECRET` | Yes | **Yes** | HMAC key for refresh tokens (min 16 chars) | Strong secret string |
-| `JWT_ACCESS_EXPIRES_IN` | No | No | Access token lifespan | `15m` |
-| `JWT_REFRESH_EXPIRES_IN`| No | No | Refresh token lifespan | `7d` |
-| `APP_BASE_URL` | Yes | No | Public frontend URL for verification links | `https://alumniconnect.edu` |
-| `CLIENT_URL` | Yes | No | Allowed CORS origin | `https://alumniconnect.edu` |
-| `COLLEGE_EMAIL_DOMAINS` | No | No | Comma-separated default institutional domains | `college.edu,university.edu` |
-| `STUDENT_REQUIRES_ADMIN_APPROVAL` | No | No | Require manual approval for students | `false` |
-| `SMTP_HOST` | In Prod | No | Mail server hostname | `smtp.mailgun.org` |
-| `SMTP_PORT` | In Prod | No | Mail server port (587, 465, 25) | `587` |
-| `SMTP_SECURE` | No | No | Use TLS/SSL directly | `false` |
-| `SMTP_USER` | In Prod | **Yes** | SMTP authentication username | Service username |
-| `SMTP_PASSWORD` | In Prod | **Yes** | SMTP authentication password | Service password |
-| `EMAIL_FROM` | No | No | Sender header for outgoing emails | `"AlumniConnect" <noreply@domain>` |
-| `FILE_STORAGE_DRIVER` | No | No | Storage provider driver (`local`) | `local` |
-| `TRUST_PROXY` | No | No | Reverse proxy hop count / configuration | `1` or `false` |
-| `ADMIN_EMAIL` | No | No | Seed admin initial email | Initial provision only |
-| `ADMIN_PASSWORD` | No | **Yes** | Seed admin initial password | Initial provision only |
-
-#### Frontend Environment Variables (Client-Side)
-
-> All `VITE_*` variables are embedded into public JavaScript bundles during `npm run build`. Never put private keys, passwords, or server credentials into frontend variables.
-
-| Variable Name | Required | Secret? | Purpose | Default / Example |
-| :--- | :---: | :---: | :--- | :--- |
-| `VITE_API_URL` | Yes | No | Base REST API endpoint URL | `https://api.alumniconnect.edu/api/v1` |
-| `VITE_SOCKET_URL` | Yes | No | Backend WebSocket server URL | `https://api.alumniconnect.edu` |
+> For the complete, authoritative contract of all backend and frontend environment variables, classifications, default fallbacks, and secret generation commands, see:  
+> 👉 **[docs/PRODUCTION_ENVIRONMENT.md](file:///c:/Users/Admin/OneDrive/Desktop/alumanti2/docs/PRODUCTION_ENVIRONMENT.md)**
 
 ---
 
