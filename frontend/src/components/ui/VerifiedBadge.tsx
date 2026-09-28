@@ -15,10 +15,13 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
   size = 'md',
   className = '',
 }) => {
-  // Only renders for approved alumni
-  if (role !== 'alumni' || verificationStatus !== 'admin_approved') {
+  // Only renders for admin_approved users
+  if (verificationStatus !== 'admin_approved') {
     return null;
   }
+
+  const isAlumni = role === 'alumni';
+  const label = isAlumni ? 'Verified Alumni' : 'College Affiliation Verified';
 
   const sizeClasses = {
     sm: 'text-[11px] px-2 py-0.5 gap-1',
@@ -32,11 +35,12 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center font-bold rounded-full bg-green-50 text-green-600 border border-green-200 ${sizeClasses} ${className}`}
-      title="Officially verified alumni record"
+      className={`inline-flex items-center font-bold rounded-full bg-green-50 text-green-700 border border-green-200 ${sizeClasses} ${className}`}
+      title={isAlumni ? 'Officially verified alumni record' : 'Officially verified student affiliation'}
     >
       <ShieldCheck className={`${iconSizes} text-green-600 shrink-0`} />
-      <span>Verified Alumni</span>
+      <span>{label}</span>
     </span>
   );
 };
+

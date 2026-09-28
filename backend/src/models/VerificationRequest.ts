@@ -39,7 +39,7 @@ const VerificationDocumentSchema = new Schema<IVerificationDocument>(
 
 const VerificationRequestSchema = new Schema<IVerificationRequest>(
   {
-    user: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     college: { type: Schema.Types.ObjectId, ref: 'College', required: true, index: true },
     role: { type: String, enum: ['student', 'alumni'], required: true, index: true },
     status: {
@@ -75,7 +75,7 @@ const VerificationRequestSchema = new Schema<IVerificationRequest>(
 
 // Partial unique index: only 1 pending verification request per user at a time
 VerificationRequestSchema.index(
-  { user: 1, status: 1 },
+  { user: 1 },
   { unique: true, partialFilterExpression: { status: 'pending' } }
 );
 

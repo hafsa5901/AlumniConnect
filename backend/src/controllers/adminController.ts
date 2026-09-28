@@ -7,6 +7,7 @@ import User, { IUser, SAFE_USER_FIELDS } from '../models/User';
 import MentorshipRequest from '../models/MentorshipRequest';
 import ReferralRequest from '../models/ReferralRequest';
 import ConnectionRequest from '../models/ConnectionRequest';
+import VerificationRequest from '../models/VerificationRequest';
 import Job from '../models/Job';
 import Event from '../models/Event';
 import Conversation from '../models/Conversation';
@@ -296,6 +297,12 @@ export const changeUserRole = asyncHandler(async (req: Request, res: Response) =
     targetUser.verificationStatus = 'admin_approved';
   } else {
     targetUser.verificationStatus = 'pending';
+    targetUser.collegeDomainVerified = false;
+    // Supersede any active verification requests on role change
+    await VerificationRequest.updateMany(
+      { user: targetUser._id, status: { $in: ['pending', 'approved'] } },
+      { status: 'superseded' }
+    );
   }
 
   await targetUser.save();
