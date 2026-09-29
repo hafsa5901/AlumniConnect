@@ -39,10 +39,20 @@ export const paginatedResponse = <T>(
   total: number,
   page: number,
   limit: number
-) => ({
-  items,
-  page,
-  limit,
-  total,
-  totalPages: Math.ceil(total / limit),
-});
+) => {
+  const totalPages = Math.ceil(total / limit) || 1;
+  return {
+    items,
+    users: items,
+    page,
+    limit,
+    total,
+    totalPages,
+    pagination: {
+      total,
+      pages: totalPages,
+      page,
+      limit,
+    },
+  };
+};

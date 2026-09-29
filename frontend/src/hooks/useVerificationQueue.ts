@@ -36,9 +36,9 @@ export function useVerificationQueue() {
           limit: 10,
         });
         const data = res.data.data;
-        setUsers(data.users || []);
-        setTotal(data.pagination?.total || 0);
-        setTotalPages(data.pagination?.pages || 1);
+        setUsers(data.items || data.users || []);
+        setTotal(data.total ?? data.pagination?.total ?? 0);
+        setTotalPages(data.totalPages ?? data.pagination?.pages ?? 1);
       }
     } catch (err: any) {
       toast.error('Failed to load verification queue.');

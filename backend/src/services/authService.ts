@@ -319,7 +319,7 @@ export async function changePassword(
 export async function approveUser(userId: string): Promise<IUser> {
   const user = await User.findByIdAndUpdate(
     userId,
-    { verificationStatus: 'admin_approved' },
+    { verificationStatus: 'admin_approved', rejectionReason: undefined },
     { new: true }
   ).select(SAFE_USER_FIELDS);
 
