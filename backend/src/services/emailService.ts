@@ -68,10 +68,10 @@ export function resolveTransportConfig(configOverrides?: {
     };
   }
 
-  // 3. Production guard: fail loudly if no valid email provider credentials configured
-  if (currentEnv.NODE_ENV === 'production') {
+  // 3. Production & Strict Email Guard: fail loudly if REQUIRE_PROD_EMAIL is true or in production mode without credentials
+  if (currentEnv.NODE_ENV === 'production' || process.env.REQUIRE_PROD_EMAIL === 'true' || process.env.SMTP_REQUIRED === 'true') {
     throw new Error(
-      'Production email transport error: SMTP_HOST/USER/PASSWORD or EMAIL_SERVICE/USER/PASSWORD must be configured in production.'
+      'Production email transport error: SMTP_HOST/USER/PASSWORD or EMAIL_SERVICE/USER/PASSWORD must be configured when REQUIRE_PROD_EMAIL=true or in production.'
     );
   }
 

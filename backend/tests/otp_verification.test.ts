@@ -103,7 +103,7 @@ describe('Signup Email Verification via OTP (Feature Matrix)', () => {
   });
 
   // ── 3. Valid OTP Verification ───────────────────────────────────────────────
-  it('3. Valid 6-digit OTP verifies account, clears OTP fields atomically, and returns session', async () => {
+  it('3. Valid 6-digit OTP verifies account to email_verified only and leaves college/admin fields untouched', async () => {
     await request(app).post('/api/v1/auth/register').send({
       name: 'Charlie Student',
       email: 'charlie@college.edu',
@@ -113,6 +113,12 @@ describe('Signup Email Verification via OTP (Feature Matrix)', () => {
       department: 'Mechanical',
       batch: '2026',
     });
+
+    const userBefore = await User.findOne({ email: 'charlie@college.edu' });
+    expect(userBefore?.verificationStatus).toBe('pending');
+    expect(userBefore?.collegeDomainVerified).toBe(false);
+    expect(userBefore?.college).toBeNull();
+    expect(userBefore?.adminCollege).toBeNull();
 
     const otp = sentOtps[0].otp;
     expect(otp).toBeDefined();
@@ -126,19 +132,24 @@ describe('Signup Email Verification via OTP (Feature Matrix)', () => {
     expect(verifyRes.body.success).toBe(true);
     expect(verifyRes.body.data.accessToken).toBeDefined();
     expect(verifyRes.body.data.user.email).toBe('charlie@college.edu');
-    expect(verifyRes.body.data.user.verificationStatus).toBe('admin_approved');
+    // Crucial: verificationStatus is 'email_verified' ONLY — not 'admin_approved'
+    expect(verifyRes.body.data.user.verificationStatus).toBe('email_verified');
 
     // Check refresh cookie
     const cookies = verifyRes.headers['set-cookie'];
     expect(cookies).toBeDefined();
     expect(cookies[0]).toContain('refreshToken');
 
-    // DB: OTP fields cleared atomically
-    const userInDb = await User.findOne({ email: 'charlie@college.edu' }).select(
+    // DB: Check all fields to prove zero side-effects
+    const userAfter = await User.findOne({ email: 'charlie@college.edu' }).select(
       '+emailVerificationOtpHash +emailVerificationOtpExpiresAt +emailVerificationOtpAttempts'
     );
-    expect(userInDb?.emailVerificationOtpHash).toBeUndefined();
-    expect(userInDb?.emailVerificationOtpExpiresAt).toBeUndefined();
+    expect(userAfter?.verificationStatus).toBe('email_verified');
+    expect(userAfter?.collegeDomainVerified).toBe(false); // Untouched
+    expect(userAfter?.college).toBeNull(); // Untouched
+    expect(userAfter?.adminCollege).toBeNull(); // Untouched
+    expect(userAfter?.emailVerificationOtpHash).toBeUndefined(); // Cleared
+    expect(userAfter?.emailVerificationOtpExpiresAt).toBeUndefined(); // Cleared
 
     // Subsequent login succeeds immediately
     const loginRes = await request(app).post('/api/v1/auth/login').send({
@@ -147,6 +158,40 @@ describe('Signup Email Verification via OTP (Feature Matrix)', () => {
     });
     expect(loginRes.status).toBe(200);
     expect(loginRes.body.success).toBe(true);
+    expect(loginRes.body.data.user.verificationStatus).toBe('email_verified');
+  });
+
+  // ── 3B. Alumni OTP Verification Isolation ──────────────────────────────────
+  it('3B. Alumni OTP verification does not bypass alumni proof or admin approval', async () => {
+    await request(app).post('/api/v1/auth/register').send({
+      name: 'Alumni Proof Tester',
+      email: 'alumni_proof@external.com',
+      password: 'StrongPassword123!',
+      confirmPassword: 'StrongPassword123!',
+      role: 'alumni',
+      department: 'Civil',
+      batch: '2020',
+      graduationYear: '2020',
+      degree: 'B.Tech Civil',
+      proofNote: 'Manual review required',
+    });
+
+    const userBefore = await User.findOne({ email: 'alumni_proof@external.com' }).select('+verificationNote');
+    expect(userBefore?.verificationStatus).toBe('pending');
+    expect(userBefore?.verificationNote).toContain('Manual review required');
+
+    const otp = sentOtps[0].otp;
+    const verifyRes = await request(app).post('/api/v1/auth/verify-otp').send({
+      email: 'alumni_proof@external.com',
+      otp,
+    });
+
+    expect(verifyRes.status).toBe(200);
+    expect(verifyRes.body.data.user.verificationStatus).toBe('email_verified'); // Email verified, but admin approval still required!
+
+    const userAfter = await User.findOne({ email: 'alumni_proof@external.com' }).select('+verificationNote');
+    expect(userAfter?.verificationStatus).toBe('email_verified');
+    expect(userAfter?.verificationNote).toContain('Manual review required'); // Preserved
   });
 
   // ── 4. Invalid OTP Rejection & Atomic Attempt Increment ─────────────────────
@@ -352,6 +397,6 @@ describe('Signup Email Verification via OTP (Feature Matrix)', () => {
     expect(linkRes.body.success).toBe(true);
 
     const updatedUser = await User.findOne({ email: 'ivan@college.edu' });
-    expect(updatedUser?.verificationStatus).toBe('admin_approved');
+    expect(updatedUser?.verificationStatus).toBe('email_verified');
   });
 });

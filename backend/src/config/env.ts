@@ -36,11 +36,11 @@ export function validateStartupConfig(): { valid: boolean; errors: string[] } {
     errors.push('MONGODB_URI must be a valid MongoDB connection string starting with mongodb:// or mongodb+srv://');
   }
 
-  if (process.env.NODE_ENV === 'production' && (process.env.REQUIRE_PROD_EMAIL === 'true' || process.env.SMTP_REQUIRED === 'true')) {
+  if (process.env.NODE_ENV === 'production' || process.env.REQUIRE_PROD_EMAIL === 'true' || process.env.SMTP_REQUIRED === 'true') {
     const hasSmtp = Boolean(process.env.SMTP_HOST && (process.env.SMTP_USER || process.env.EMAIL_USER) && (process.env.SMTP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD));
-    const hasService = Boolean(process.env.EMAIL_SERVICE && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
+    const hasService = Boolean(process.env.EMAIL_SERVICE && (process.env.SMTP_USER || process.env.EMAIL_USER) && (process.env.SMTP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD));
     if (!hasSmtp && !hasService) {
-      errors.push('Production SMTP configuration (SMTP_HOST, SMTP_USER, SMTP_PASSWORD) or EMAIL_SERVICE credentials are required in production.');
+      errors.push('SMTP configuration (SMTP_HOST, SMTP_USER, SMTP_PASSWORD) or EMAIL_SERVICE credentials are required when REQUIRE_PROD_EMAIL=true or in production.');
     }
   }
 

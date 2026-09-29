@@ -216,18 +216,9 @@ export async function verifyOtp(input: VerifyOtpInput): Promise<{
     throw createError(`Invalid verification code. ${remaining} attempt(s) remaining.`, 400, 'INVALID_OTP');
   }
 
-  // Determine next verification status
-  const isInstitutional = isEmailInAllowedDomains(user.email);
-  let nextStatus: 'email_verified' | 'admin_approved' = 'email_verified';
-  if (user.role === 'student') {
-    nextStatus = env.STUDENT_REQUIRES_ADMIN_APPROVAL ? 'email_verified' : 'admin_approved';
-  } else if (user.role === 'alumni' && isInstitutional) {
-    nextStatus = 'email_verified';
-  } else {
-    nextStatus = 'email_verified';
-  }
-
-  // Atomic conditional update to prevent double-use / race conditions
+  // Atomic conditional update to prevent double-use / race conditions.
+  // Email OTP verification transitions status to 'email_verified' ONLY.
+  // College verification, alumni proof, and admin approval remain completely separate.
   const updated = await User.findOneAndUpdate(
     {
       _id: user._id,
@@ -235,7 +226,7 @@ export async function verifyOtp(input: VerifyOtpInput): Promise<{
     },
     {
       $set: {
-        verificationStatus: nextStatus,
+        verificationStatus: 'email_verified',
       },
       $unset: {
         emailVerificationOtpHash: 1,
@@ -315,15 +306,9 @@ export async function verifyEmail(rawToken: string): Promise<ReturnType<typeof s
   let newStatus = user.verificationStatus;
 
   if (user.verificationStatus === 'pending') {
-    if (user.role === 'student') {
-      newStatus = env.STUDENT_REQUIRES_ADMIN_APPROVAL ? 'email_verified' : 'admin_approved';
-    } else if (user.role === 'alumni' && isInstitutional) {
-      newStatus = 'email_verified'; // Still needs admin_approved for full alumni features
-    }
-    // Non-institutional alumni: stays pending after email click — admin must review
+    user.verificationStatus = 'email_verified';
   }
 
-  user.verificationStatus = newStatus;
   user.verificationTokenHash = undefined;
   user.verificationTokenExpires = undefined;
   user.emailVerificationOtpHash = undefined;
