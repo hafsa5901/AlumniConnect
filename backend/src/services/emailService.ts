@@ -85,11 +85,25 @@ export function resolveTransportConfig(configOverrides?: {
 export async function createTransporter(configOverrides?: Parameters<typeof resolveTransportConfig>[0]): Promise<nodemailer.Transporter> {
   const resolved = resolveTransportConfig(configOverrides);
 
-  if (resolved.type === 'smtp' || resolved.type === 'service') {
+  if (resolved.type === 'smtp') {
+    if (env.NODE_ENV === 'development') {
+      console.log(`[EMAIL] Initializing SMTP transport (host: ${resolved.options.host}, port: ${resolved.options.port}, secure: ${resolved.options.secure})`);
+    }
+    return nodemailer.createTransport(resolved.options);
+  }
+
+  if (resolved.type === 'service') {
+    if (env.NODE_ENV === 'development') {
+      console.log(`[EMAIL] Initializing service transport (${resolved.options.service})`);
+    }
     return nodemailer.createTransport(resolved.options);
   }
 
   // Dev fallback: Ethereal test account (auto-created)
+  if (env.NODE_ENV === 'development') {
+    console.log('[EMAIL] Notice: Real SMTP is unconfigured. Using test email transporter.');
+  }
+
   try {
     const testAccount = await nodemailer.createTestAccount();
     return nodemailer.createTransport({
@@ -98,7 +112,10 @@ export async function createTransporter(configOverrides?: Parameters<typeof reso
       secure: false,
       auth: { user: testAccount.user, pass: testAccount.pass },
     });
-  } catch {
+  } catch (err: any) {
+    if (env.NODE_ENV === 'development') {
+      console.log(`[EMAIL] Test account creation failed (${err?.message || err}), falling back to console logger.`);
+    }
     // Ultimate fallback: console logger
     return { sendMail: consoleFallback } as unknown as nodemailer.Transporter;
   }
@@ -121,14 +138,11 @@ export function resetTransporterForTest(): void {
   transporter = null;
 }
 
-// Dev console fallback — logs the email content safely in dev
+// Dev console fallback — logs metadata safely without exposing raw tokens/OTPs
 async function consoleFallback(options: nodemailer.SendMailOptions) {
-  console.log('\n============================');
-  console.log('[DEV EMAIL] Would have sent:');
+  console.log('[DEV EMAIL] Dispatched email:');
   console.log(`  To:      ${options.to}`);
   console.log(`  Subject: ${options.subject}`);
-  console.log(`  Body:\n${options.text || options.html}`);
-  console.log('============================\n');
   return { messageId: 'dev-console-fallback' };
 }
 
@@ -138,13 +152,102 @@ async function send(options: nodemailer.SendMailOptions): Promise<void> {
     const info = await t.sendMail({ from: env.EMAIL_FROM, ...options });
     if (env.NODE_ENV === 'development') {
       const url = nodemailer.getTestMessageUrl(info as nodemailer.SentMessageInfo);
-      if (url) console.log('[DEV EMAIL] Preview URL:', url);
+      if (url) console.log('[DEV EMAIL] Test Preview URL:', url);
     }
-  } catch (err) {
-    // Log but don't crash — email failure shouldn't break core user actions
-    console.error('[EMAIL] Failed to send email:', err);
+  } catch (err: any) {
+    // Log safe error without passwords or credentials
+    console.error(`[EMAIL] Failed to deliver email to ${options.to}:`, err?.message || err);
     if (env.NODE_ENV === 'production') throw err;
   }
+}
+
+// ── Email Templates & Dispatchers ─────────────────────────────────────────────
+
+export async function sendOtpVerificationEmail(
+  to: string,
+  name: string,
+  otp: string
+): Promise<void> {
+  const textContent = `Hi ${name},
+
+Thank you for registering on AlumniConnect. Please verify your email address using the following 6-digit verification code:
+
+${otp}
+
+Important: This code will expire in 10 minutes. For your security, do not share this code with anyone.
+
+If you did not attempt to register for an AlumniConnect account, please safely ignore this email.
+
+Best regards,
+The AlumniConnect Team`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your AlumniConnect Verification Code</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1e293b;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width:540px;background:#ffffff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);" cellspacing="0" cellpadding="0">
+          <tr>
+            <td style="background:#0F1E3D;padding:24px 32px;text-align:left;">
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">
+                    🎓 AlumniConnect
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="color:#0F1E3D;font-size:22px;font-weight:700;margin:0 0 16px 0;">Verify your email address</h1>
+              <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 16px 0;">Hi <strong>${name}</strong>,</p>
+              <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 24px 0;">
+                Thank you for registering on AlumniConnect. Enter the following 6-digit verification code to complete your signup:
+              </p>
+              <div style="background:#f1f5f9;border:2px dashed #cbd5e1;border-radius:10px;padding:20px;text-align:center;margin:0 0 24px 0;">
+                <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#0F1E3D;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;display:inline-block;">
+                  ${otp}
+                </span>
+              </div>
+              <div style="background:#f8fafc;border-left:4px solid #0F1E3D;padding:12px 16px;border-radius:4px;margin-bottom:24px;">
+                <p style="margin:0;font-size:13px;color:#475569;line-height:1.5;">
+                  ⏱ <strong>Note:</strong> This verification code expires in <strong>10 minutes</strong>. Do not share this code with anyone.
+                </p>
+              </div>
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
+              <p style="color:#94a3b8;font-size:12px;line-height:1.5;margin:0;">
+                If you did not register for an AlumniConnect account, please safely ignore this email. No account will be activated without verification.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f8fafc;padding:16px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+              <p style="color:#94a3b8;font-size:12px;margin:0;">
+                © ${new Date().getFullYear()} AlumniConnect. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  await send({
+    to,
+    subject: 'Your AlumniConnect verification code',
+    text: textContent,
+    html: htmlContent,
+  });
 }
 
 // ── Email Templates & Dispatchers ─────────────────────────────────────────────
@@ -247,10 +350,6 @@ The AlumniConnect Team`;
     text: textContent,
     html: htmlContent,
   });
-
-  if (env.NODE_ENV === 'development') {
-    console.log(`[DEV EMAIL] Verification link for ${to}: ${link}`);
-  }
 }
 
 export async function sendPasswordResetEmail(
@@ -332,10 +431,6 @@ The AlumniConnect Team`;
     text: textContent,
     html: htmlContent,
   });
-
-  if (env.NODE_ENV === 'development') {
-    console.log(`[DEV EMAIL] Reset link for ${to}: ${link}`);
-  }
 }
 
 export async function sendApprovalEmail(to: string, name: string): Promise<void> {

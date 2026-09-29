@@ -10,6 +10,8 @@ import {
   resetPasswordSchema,
   changePasswordSchema,
   resendVerificationSchema,
+  verifyOtpSchema,
+  resendOtpSchema,
 } from '../validators/auth';
 import * as authController from '../controllers/authController';
 
@@ -55,15 +57,18 @@ const loginLimiter          = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
 const registerLimiter       = makeRateLimiter(10,  60 * 60 * 1000); // 10/hr
 const forgotLimiter         = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
 const resendLimiter         = makeRateLimiter(5,  15 * 60 * 1000); // 5/15min
+const verifyOtpLimiter      = makeRateLimiter(10, 15 * 60 * 1000); // 10/15min
 const changePasswordLimiter = makeUserRateLimiter(5,  15 * 60 * 1000); // 5/15min per user
 
 // ── Public routes ─────────────────────────────────────────────────────────────
-router.post('/register',            registerLimiter, validate(registerSchema),           authController.register);
-router.post('/login',               loginLimiter,    validate(loginSchema),               authController.login);
+router.post('/register',            registerLimiter,  validate(registerSchema),           authController.register);
+router.post('/login',               loginLimiter,     validate(loginSchema),              authController.login);
+router.post('/verify-otp',          verifyOtpLimiter, validate(verifyOtpSchema),          authController.verifyOtp);
+router.post('/resend-otp',          resendLimiter,    validate(resendOtpSchema),          authController.resendOtp);
 router.post('/verify-email',                                                              authController.verifyEmail);
-router.post('/resend-verification', resendLimiter,   validate(resendVerificationSchema),  authController.resendVerification);
-router.post('/forgot-password',     forgotLimiter,   validate(forgotPasswordSchema),      authController.forgotPassword);
-router.post('/reset-password',                       validate(resetPasswordSchema),       authController.resetPassword);
+router.post('/resend-verification', resendLimiter,    validate(resendVerificationSchema), authController.resendVerification);
+router.post('/forgot-password',     forgotLimiter,    validate(forgotPasswordSchema),     authController.forgotPassword);
+router.post('/reset-password',                        validate(resetPasswordSchema),      authController.resetPassword);
 router.post('/refresh',                                                                   authController.refresh);
 
 // ── Protected routes ──────────────────────────────────────────────────────────

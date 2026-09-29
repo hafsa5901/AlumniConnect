@@ -5,9 +5,24 @@ import * as authService from '../services/authService';
 
 // ── POST /api/v1/auth/register ────────────────────────────────────────────────
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  const { user, accessToken, rawRefresh } = await authService.registerUser(req.body);
+  const result = await authService.registerUser(req.body);
+  res.status(201).json({ success: true, data: result });
+});
+
+// ── POST /api/v1/auth/verify-otp ──────────────────────────────────────────────
+export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { user, accessToken, rawRefresh } = await authService.verifyOtp(req.body);
   setRefreshCookie(res, rawRefresh);
-  res.status(201).json({ success: true, data: { user, accessToken } });
+  res.json({ success: true, data: { user, accessToken, message: 'Email verified successfully.' } });
+});
+
+// ── POST /api/v1/auth/resend-otp ──────────────────────────────────────────────
+export const resendOtp = asyncHandler(async (req: Request, res: Response) => {
+  await authService.resendOtp(req.body.email);
+  res.json({
+    success: true,
+    data: { message: 'If an unverified account exists for this email, a new verification code has been sent.' },
+  });
 });
 
 // ── POST /api/v1/auth/login ───────────────────────────────────────────────────

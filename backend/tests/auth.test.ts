@@ -60,8 +60,8 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
     expect(inDb).toBeNull();
   });
 
-  // 2. Student registers, institutional email → 201, verificationStatus: pending, tokens issued
-  it('2. Student registers with institutional email -> 201, pending verificationStatus, tokens issued', async () => {
+  // 2. Student registers, institutional email → 201, verificationStatus: pending, verification required
+  it('2. Student registers with institutional email -> 201, pending verificationStatus, verification required', async () => {
     const res = await request(app).post('/api/v1/auth/register').send({
       name: 'Bob Student',
       email: 'bob@college.edu',
@@ -77,12 +77,9 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.user.verificationStatus).toBe('pending');
     expect(res.body.data.user.role).toBe('student');
-    expect(res.body.data.accessToken).toBeDefined();
-
-    // Check refresh cookie
-    const cookies = res.headers['set-cookie'];
-    expect(cookies).toBeDefined();
-    expect(cookies[0]).toContain('refreshToken');
+    expect(res.body.data.verificationRequired).toBe(true);
+    // Raw session is gated behind OTP verification
+    expect(res.body.data.accessToken).toBeUndefined();
   });
 
   // 3. Alumni registers, institutional email → 201, pending
@@ -258,8 +255,8 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
     expect(res.body.data).toBeUndefined();
   });
 
-  // 10. Login, verificationStatus: pending or rejected, accountStatus: active → 200, login succeeds
-  it('10. Login with pending or rejected status but active account -> 200 login succeeds', async () => {
+  // 10. Login, verificationStatus: pending → 403 EMAIL_VERIFICATION_REQUIRED; email_verified → 200 succeeds
+  it('10. Login with pending status returns 403 EMAIL_VERIFICATION_REQUIRED, verified succeeds', async () => {
     const passwordHash = await hashPassword('SecurePassword123');
     await User.create({
       name: 'Pending User',
@@ -272,14 +269,24 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
       verificationStatus: 'pending',
     });
 
-    const res = await request(app).post('/api/v1/auth/login').send({
+    const pendingRes = await request(app).post('/api/v1/auth/login').send({
       email: 'pending_user@college.edu',
       password: 'SecurePassword123',
     });
 
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.user.verificationStatus).toBe('pending');
+    expect(pendingRes.status).toBe(403);
+    expect(pendingRes.body.success).toBe(false);
+    expect(pendingRes.body.error.code).toBe('EMAIL_VERIFICATION_REQUIRED');
+
+    // Once email_verified, login succeeds
+    await User.updateOne({ email: 'pending_user@college.edu' }, { verificationStatus: 'email_verified' });
+    const verifiedRes = await request(app).post('/api/v1/auth/login').send({
+      email: 'pending_user@college.edu',
+      password: 'SecurePassword123',
+    });
+    expect(verifiedRes.status).toBe(200);
+    expect(verifiedRes.body.success).toBe(true);
+    expect(verifiedRes.body.data.user.verificationStatus).toBe('email_verified');
   });
 
   // 11. GET /auth/me with no token → 401 NOT_AUTHENTICATED
@@ -291,17 +298,23 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
 
   // 12. GET /auth/me with valid token → 200, safe user fields only
   it('12. GET /api/v1/auth/me with valid token -> 200, safe user fields only', async () => {
-    const regRes = await request(app).post('/api/v1/auth/register').send({
+    const passwordHash = await hashPassword('SecurePassword123');
+    const user = await User.create({
       name: 'Helen Me',
       email: 'helen@college.edu',
-      password: 'SecurePassword123',
-      confirmPassword: 'SecurePassword123',
+      passwordHash,
       role: 'student',
       department: 'Biotech',
       batch: '2026',
+      accountStatus: 'active',
+      verificationStatus: 'admin_approved',
     });
 
-    const token = regRes.body.data.accessToken;
+    const loginRes = await request(app).post('/api/v1/auth/login').send({
+      email: 'helen@college.edu',
+      password: 'SecurePassword123',
+    });
+    const token = loginRes.body.data.accessToken;
 
     const res = await request(app)
       .get('/api/v1/auth/me')
@@ -447,17 +460,23 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
 
   // 17. Student calls GET /api/v1/admin/users → 403 FORBIDDEN_ROLE
   it('17. Student calls GET /api/v1/admin/users -> 403 FORBIDDEN_ROLE', async () => {
-    const regRes = await request(app).post('/api/v1/auth/register').send({
+    const passwordHash = await hashPassword('SecurePassword123');
+    await User.create({
       name: 'Laura Student',
       email: 'laura@college.edu',
-      password: 'SecurePassword123',
-      confirmPassword: 'SecurePassword123',
+      passwordHash,
       role: 'student',
       department: 'CS',
       batch: '2026',
+      accountStatus: 'active',
+      verificationStatus: 'admin_approved',
     });
 
-    const studentToken = regRes.body.data.accessToken;
+    const studentLogin = await request(app).post('/api/v1/auth/login').send({
+      email: 'laura@college.edu',
+      password: 'SecurePassword123',
+    });
+    const studentToken = studentLogin.body.data.accessToken;
 
     const res = await request(app)
       .get('/api/v1/admin/users')
@@ -476,17 +495,24 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
 
   // 19. Refresh token rotation
   it('19. Refresh token rotation -> old refresh token invalidated, new one works', async () => {
-    const regRes = await request(app).post('/api/v1/auth/register').send({
+    const passwordHash = await hashPassword('SecurePassword123');
+    await User.create({
       name: 'Mike Rotate',
       email: 'mike@college.edu',
-      password: 'SecurePassword123',
-      confirmPassword: 'SecurePassword123',
+      passwordHash,
       role: 'student',
       department: 'CS',
       batch: '2025',
+      accountStatus: 'active',
+      verificationStatus: 'admin_approved',
     });
 
-    const initialCookie = regRes.headers['set-cookie'];
+    const loginRes = await request(app).post('/api/v1/auth/login').send({
+      email: 'mike@college.edu',
+      password: 'SecurePassword123',
+    });
+
+    const initialCookie = loginRes.headers['set-cookie'];
 
     // 1st refresh with valid cookie
     const refresh1 = await request(app)
@@ -528,6 +554,7 @@ describe('Phase 2 — Auth, Verification & RBAC Matrix Tests', () => {
       department: 'CS',
       batch: '2025',
       accountStatus: 'active',
+      verificationStatus: 'admin_approved',
       resetTokenHash: hash,
       resetTokenExpires: expires,
       refreshTokenHash: 'valid_refresh_hash',

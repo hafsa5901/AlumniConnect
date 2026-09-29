@@ -5,19 +5,25 @@ import {
   signAccessToken,
   generateSecureToken,
   hashToken,
+  generateOtp,
+  hashOtp,
+  compareOtp,
   isEmailInAllowedDomains,
+  OTP_TTL,
+  MAX_OTP_ATTEMPTS,
   VERIFICATION_TOKEN_TTL,
   RESET_TOKEN_TTL,
   REFRESH_TOKEN_TTL,
 } from '../utils/auth';
 import {
   sendVerificationEmail,
+  sendOtpVerificationEmail,
   sendPasswordResetEmail,
   sendApprovalEmail,
   sendRejectionEmail,
 } from './emailService';
 import { createError } from '../middleware/errorHandler';
-import { RegisterInput, LoginInput } from '../validators/auth';
+import { RegisterInput, LoginInput, VerifyOtpInput } from '../validators/auth';
 import { env } from '../config/env';
 
 /** Fields safe to return in every auth response */
@@ -51,8 +57,9 @@ function issueTokens(user: IUser) {
 // ── Register ──────────────────────────────────────────────────────────────────
 export async function registerUser(input: RegisterInput): Promise<{
   user: ReturnType<typeof safeUser>;
-  accessToken: string;
-  rawRefresh: string;
+  email: string;
+  verificationRequired: boolean;
+  message: string;
 }> {
   const { name, email, password, role, department, batch, institution,
           studentId, alumniId, graduationYear, degree, proofNote } = input;
@@ -86,7 +93,12 @@ export async function registerUser(input: RegisterInput): Promise<{
 
   const passwordHash = await hashPassword(password);
 
-  // Verification token
+  // 6-digit OTP generation and keyed HMAC hash
+  const rawOtp = generateOtp();
+  const emailVerificationOtpHash = hashOtp(rawOtp);
+  const emailVerificationOtpExpiresAt = new Date(Date.now() + OTP_TTL);
+
+  // Legacy verification token for backward-compatible links
   const { raw: rawVerificationToken, hash: verificationTokenHash, expires: verificationTokenExpires } =
     generateSecureToken(VERIFICATION_TOKEN_TTL);
 
@@ -108,26 +120,182 @@ export async function registerUser(input: RegisterInput): Promise<{
          degree && `Degree: ${degree}`,
          proofNote].filter(Boolean).join('\n')
       : undefined,
+    emailVerificationOtpHash,
+    emailVerificationOtpExpiresAt,
+    emailVerificationOtpAttempts: 0,
     verificationTokenHash,
     verificationTokenExpires,
   });
 
-  // Send verification email (async, don't block registration on email failure)
-  sendVerificationEmail(email, name, rawVerificationToken).catch((err) =>
-    console.error('[REGISTER] Failed to send verification email:', err)
+  // Send OTP email (async, don't block registration on email failure)
+  sendOtpVerificationEmail(email, name, rawOtp).catch((err) =>
+    console.error('[REGISTER] Failed to send OTP email:', err?.message || err)
   );
 
-  const { accessToken, rawRefresh, refreshHash, refreshExpires } = issueTokens(user);
+  // Also send legacy link email if required
+  sendVerificationEmail(email, name, rawVerificationToken).catch(() => {});
 
-  await User.findByIdAndUpdate(user._id, {
-    refreshTokenHash: refreshHash,
-    refreshTokenExpires: refreshExpires,
-  });
-
-  return { user: safeUser(user), accessToken, rawRefresh };
+  return {
+    user: safeUser(user),
+    email: user.email,
+    verificationRequired: true,
+    message: 'Registration successful. A 6-digit verification code has been sent to your email.',
+  };
 }
 
-// ── Verify email ──────────────────────────────────────────────────────────────
+// ── Verify OTP ────────────────────────────────────────────────────────────────
+export async function verifyOtp(input: VerifyOtpInput): Promise<{
+  user: ReturnType<typeof safeUser>;
+  accessToken: string;
+  rawRefresh: string;
+}> {
+  const { email, otp } = input;
+  const normalizedEmail = email.toLowerCase().trim();
+
+  const user = await User.findOne({ email: normalizedEmail }).select(
+    '+emailVerificationOtpHash +emailVerificationOtpExpiresAt +emailVerificationOtpAttempts'
+  );
+
+  if (!user) {
+    throw createError('Invalid or expired verification code.', 400, 'INVALID_OR_EXPIRED_OTP');
+  }
+
+  if (user.accountStatus === 'suspended' || user.accountStatus === 'deactivated') {
+    throw createError(
+      'Your account has been suspended. Please contact the institution administrator.',
+      403,
+      'ACCOUNT_SUSPENDED'
+    );
+  }
+
+  // If already verified, issue session
+  if (user.verificationStatus === 'email_verified' || user.verificationStatus === 'admin_approved') {
+    const { accessToken, rawRefresh, refreshHash, refreshExpires } = issueTokens(user);
+    await User.findByIdAndUpdate(user._id, {
+      refreshTokenHash: refreshHash,
+      refreshTokenExpires: refreshExpires,
+      lastLogin: new Date(),
+    });
+    return { user: safeUser(user), accessToken, rawRefresh };
+  }
+
+  if (!user.emailVerificationOtpHash || !user.emailVerificationOtpExpiresAt) {
+    throw createError('No pending verification code found. Please request a new code.', 400, 'INVALID_OR_EXPIRED_OTP');
+  }
+
+  if (user.emailVerificationOtpExpiresAt < new Date()) {
+    throw createError('Verification code has expired. Please request a new code.', 400, 'OTP_EXPIRED');
+  }
+
+  if ((user.emailVerificationOtpAttempts ?? 0) >= MAX_OTP_ATTEMPTS) {
+    await User.updateOne(
+      { _id: user._id },
+      { $unset: { emailVerificationOtpHash: 1, emailVerificationOtpExpiresAt: 1 } }
+    );
+    throw createError('Too many incorrect attempts. Please request a new verification code.', 400, 'MAX_ATTEMPTS_EXCEEDED');
+  }
+
+  const isMatch = compareOtp(otp, user.emailVerificationOtpHash);
+  if (!isMatch) {
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: user._id },
+      { $inc: { emailVerificationOtpAttempts: 1 } },
+      { new: true }
+    );
+    const attemptsUsed = updatedUser?.emailVerificationOtpAttempts ?? ((user.emailVerificationOtpAttempts ?? 0) + 1);
+    const remaining = Math.max(0, MAX_OTP_ATTEMPTS - attemptsUsed);
+
+    if (remaining === 0) {
+      await User.updateOne(
+        { _id: user._id },
+        { $unset: { emailVerificationOtpHash: 1, emailVerificationOtpExpiresAt: 1 } }
+      );
+      throw createError('Too many incorrect attempts. Please request a new verification code.', 400, 'MAX_ATTEMPTS_EXCEEDED');
+    }
+
+    throw createError(`Invalid verification code. ${remaining} attempt(s) remaining.`, 400, 'INVALID_OTP');
+  }
+
+  // Determine next verification status
+  const isInstitutional = isEmailInAllowedDomains(user.email);
+  let nextStatus: 'email_verified' | 'admin_approved' = 'email_verified';
+  if (user.role === 'student') {
+    nextStatus = env.STUDENT_REQUIRES_ADMIN_APPROVAL ? 'email_verified' : 'admin_approved';
+  } else if (user.role === 'alumni' && isInstitutional) {
+    nextStatus = 'email_verified';
+  } else {
+    nextStatus = 'email_verified';
+  }
+
+  // Atomic conditional update to prevent double-use / race conditions
+  const updated = await User.findOneAndUpdate(
+    {
+      _id: user._id,
+      emailVerificationOtpHash: user.emailVerificationOtpHash,
+    },
+    {
+      $set: {
+        verificationStatus: nextStatus,
+      },
+      $unset: {
+        emailVerificationOtpHash: 1,
+        emailVerificationOtpExpiresAt: 1,
+        emailVerificationOtpAttempts: 1,
+        verificationTokenHash: 1,
+        verificationTokenExpires: 1,
+      },
+    },
+    { new: true }
+  );
+
+  if (!updated) {
+    throw createError('Verification code was already used or is no longer valid.', 400, 'INVALID_OR_EXPIRED_OTP');
+  }
+
+  // Issue tokens upon successful OTP verification
+  const { accessToken, rawRefresh, refreshHash, refreshExpires } = issueTokens(updated);
+  await User.findByIdAndUpdate(updated._id, {
+    refreshTokenHash: refreshHash,
+    refreshTokenExpires: refreshExpires,
+    lastLogin: new Date(),
+  });
+
+  return { user: safeUser(updated), accessToken, rawRefresh };
+}
+
+// ── Resend OTP ─────────────────────────────────────────────────────────────────
+export async function resendOtp(email: string): Promise<void> {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ email: normalizedEmail }).select(
+    '+emailVerificationOtpHash +emailVerificationOtpExpiresAt'
+  );
+
+  // Generic silent return if user does not exist or is already verified
+  if (!user || user.verificationStatus !== 'pending') {
+    return;
+  }
+
+  const rawOtp = generateOtp();
+  const hash = hashOtp(rawOtp);
+  const expires = new Date(Date.now() + OTP_TTL);
+
+  await User.findOneAndUpdate(
+    { _id: user._id },
+    {
+      $set: {
+        emailVerificationOtpHash: hash,
+        emailVerificationOtpExpiresAt: expires,
+        emailVerificationOtpAttempts: 0,
+      },
+    }
+  );
+
+  sendOtpVerificationEmail(user.email, user.name, rawOtp).catch((err) =>
+    console.error('[RESEND_OTP] Failed to send email:', err?.message || err)
+  );
+}
+
+// ── Verify email (Legacy link-based) ──────────────────────────────────────────
 export async function verifyEmail(rawToken: string): Promise<ReturnType<typeof safeUser>> {
   const hash = hashToken(rawToken);
 
@@ -158,12 +326,15 @@ export async function verifyEmail(rawToken: string): Promise<ReturnType<typeof s
   user.verificationStatus = newStatus;
   user.verificationTokenHash = undefined;
   user.verificationTokenExpires = undefined;
+  user.emailVerificationOtpHash = undefined;
+  user.emailVerificationOtpExpiresAt = undefined;
+  user.emailVerificationOtpAttempts = undefined;
   await user.save();
 
   return safeUser(user);
 }
 
-// ── Resend verification email ────────────────────────────────────────────────
+// ── Resend verification email (Legacy link-based) ─────────────────────────────
 export async function resendVerificationEmail(email: string): Promise<void> {
   const normalizedEmail = email.toLowerCase().trim();
   const user = await User.findOne({ email: normalizedEmail }).select('+verificationTokenHash +verificationTokenExpires');
@@ -179,7 +350,7 @@ export async function resendVerificationEmail(email: string): Promise<void> {
   await user.save();
 
   sendVerificationEmail(user.email, user.name, raw).catch((err) =>
-    console.error('[RESEND_VERIFICATION] Failed to send email:', err)
+    console.error('[RESEND_VERIFICATION] Failed to send email:', err?.message || err)
   );
 }
 
@@ -209,6 +380,15 @@ export async function loginUser(input: LoginInput): Promise<{
       'Your account has been suspended. Please contact the institution administrator.',
       403,
       'ACCOUNT_SUSPENDED'
+    );
+  }
+
+  // Step 3: check if email is verified for non-admin accounts
+  if (user.role !== 'admin' && user.verificationStatus === 'pending') {
+    throw createError(
+      'Please verify your email address to continue.',
+      403,
+      'EMAIL_VERIFICATION_REQUIRED'
     );
   }
 

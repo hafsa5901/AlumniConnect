@@ -66,12 +66,31 @@ export const resendVerificationSchema = z.object({
 
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 
-// ── Verify email ──────────────────────────────────────────────────────────────
+// ── Verify email (Legacy link) ────────────────────────────────────────────────
 export const verifyEmailSchema = z.object({
   token: z.string({ required_error: 'Verification token is required.' }).min(1, 'Verification token is required.'),
 });
 
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+// ── Verify OTP ────────────────────────────────────────────────────────────────
+export const verifyOtpSchema = z.object({
+  email: emailSchema,
+  otp: z
+    .string({ required_error: 'Verification code is required.' })
+    .trim()
+    .length(6, 'Verification code must be exactly 6 digits.')
+    .regex(/^\d{6}$/, 'Verification code must contain only numbers.'),
+});
+
+export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
+
+// ── Resend OTP ─────────────────────────────────────────────────────────────────
+export const resendOtpSchema = z.object({
+  email: emailSchema,
+});
+
+export type ResendOtpInput = z.infer<typeof resendOtpSchema>;
 
 // ── Forgot password ────────────────────────────────────────────────────────────
 export const forgotPasswordSchema = z.object({

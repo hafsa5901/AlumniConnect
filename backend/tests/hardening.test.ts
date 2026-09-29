@@ -42,17 +42,24 @@ describe('Phase 2 Hardening & Security Checks', () => {
 
   // 1. Refresh rotation: using a refresh cookie twice — the first use issues a new one and invalidates the old; reusing the old one fails.
   it('Hardening: Refresh rotation prevents reuse of old token', async () => {
-    const regRes = await request(app).post('/api/v1/auth/register').send({
+    const passwordHash = await hashPassword('SecurePassword123');
+    await User.create({
       name: 'Rotation Tester',
       email: 'rotate@college.edu',
-      password: 'SecurePassword123',
-      confirmPassword: 'SecurePassword123',
+      passwordHash,
       role: 'student',
       department: 'CS',
       batch: '2025',
+      accountStatus: 'active',
+      verificationStatus: 'admin_approved',
     });
 
-    const cookie1 = regRes.headers['set-cookie'];
+    const loginRes = await request(app).post('/api/v1/auth/login').send({
+      email: 'rotate@college.edu',
+      password: 'SecurePassword123',
+    });
+
+    const cookie1 = loginRes.headers['set-cookie'];
     expect(cookie1).toBeDefined();
 
     // First refresh: succeeds and returns new cookie
@@ -83,17 +90,24 @@ describe('Phase 2 Hardening & Security Checks', () => {
     });
     const adminToken = adminLogin.body.data.accessToken;
 
-    const userRes = await request(app).post('/api/v1/auth/register').send({
+    const passwordHash = await hashPassword('SecurePassword123');
+    const user = await User.create({
       name: 'To Be Suspended',
       email: 'suspendme@college.edu',
-      password: 'SecurePassword123',
-      confirmPassword: 'SecurePassword123',
+      passwordHash,
       role: 'student',
       department: 'CS',
       batch: '2025',
+      accountStatus: 'active',
+      verificationStatus: 'admin_approved',
     });
-    const userCookie = userRes.headers['set-cookie'];
-    const userId = userRes.body.data.user.id;
+
+    const userLogin = await request(app).post('/api/v1/auth/login').send({
+      email: 'suspendme@college.edu',
+      password: 'SecurePassword123',
+    });
+    const userCookie = userLogin.headers['set-cookie'];
+    const userId = user._id.toString();
 
     // Admin suspends user
     const suspRes = await request(app)
@@ -110,16 +124,23 @@ describe('Phase 2 Hardening & Security Checks', () => {
 
   // 3. Password reset invalidates existing sessions: old refresh token stops working.
   it('Hardening: Password reset invalidates existing refresh token sessions', async () => {
-    const regRes = await request(app).post('/api/v1/auth/register').send({
+    const passwordHash = await hashPassword('OldPassword123');
+    const user = await User.create({
       name: 'Reset Tester',
       email: 'resettest@college.edu',
-      password: 'OldPassword123',
-      confirmPassword: 'OldPassword123',
+      passwordHash,
       role: 'student',
       department: 'CS',
       batch: '2025',
+      accountStatus: 'active',
+      verificationStatus: 'admin_approved',
     });
-    const oldCookie = regRes.headers['set-cookie'];
+
+    const loginRes = await request(app).post('/api/v1/auth/login').send({
+      email: 'resettest@college.edu',
+      password: 'OldPassword123',
+    });
+    const oldCookie = loginRes.headers['set-cookie'];
 
     // Generate a reset token directly in DB for testing
     const { raw, hash, expires } = generateSecureToken(RESET_TOKEN_TTL);
@@ -142,7 +163,7 @@ describe('Phase 2 Hardening & Security Checks', () => {
     expect(refreshRes.status).toBe(401);
   });
 
-  // 4. No raw tokens at rest: inspect database directly — verification, reset, and refresh tokens stored as hashes only.
+  // 4. No raw tokens at rest: inspect database directly — verification, reset, and OTP tokens stored as hashes only.
   it('Hardening: Tokens and passwords stored as hashes only (never raw) in DB', async () => {
     const regRes = await request(app).post('/api/v1/auth/register').send({
       name: 'Hash Checker',
@@ -155,7 +176,7 @@ describe('Phase 2 Hardening & Security Checks', () => {
     });
 
     const userInDb = await User.findOne({ email: 'hashcheck@college.edu' }).select(
-      '+passwordHash +verificationTokenHash +refreshTokenHash +resetTokenHash'
+      '+passwordHash +verificationTokenHash +emailVerificationOtpHash +refreshTokenHash +resetTokenHash'
     );
 
     expect(userInDb).not.toBeNull();
@@ -166,8 +187,8 @@ describe('Phase 2 Hardening & Security Checks', () => {
     // Verification token is sha256 hex string (64 characters)
     expect(userInDb?.verificationTokenHash).toMatch(/^[a-f0-9]{64}$/);
 
-    // Refresh token is sha256 hex string (64 characters)
-    expect(userInDb?.refreshTokenHash).toMatch(/^[a-f0-9]{64}$/);
+    // OTP token is keyed HMAC-SHA256 hex string (64 characters)
+    expect(userInDb?.emailVerificationOtpHash).toMatch(/^[a-f0-9]{64}$/);
   });
 
   // 5. Enumeration resistance: wrong password vs nonexistent email returns identical response.
@@ -327,8 +348,8 @@ describe('Phase 2 Hardening & Security Checks', () => {
     expect(logs[3].action).toBe('user.reactivate');
   });
 
-  // 9. Canonical token issuance check: pending & rejected users get tokens at login, gated on features
-  it('Hardening: Pending and rejected users receive tokens upon login when account is active', async () => {
+  // 9. Canonical token issuance check: pending unverified users blocked with EMAIL_VERIFICATION_REQUIRED, rejected active users get tokens
+  it('Hardening: Pending unverified users blocked with EMAIL_VERIFICATION_REQUIRED, rejected active users receive tokens', async () => {
     const passwordHash = await hashPassword('Password12345');
     const pendingUser = await User.create({
       name: 'Pending Alumni',
@@ -352,15 +373,14 @@ describe('Phase 2 Hardening & Security Checks', () => {
       verificationStatus: 'rejected',
     });
 
-    // Pending login
+    // Pending login blocked
     const pendingLogin = await request(app).post('/api/v1/auth/login').send({
       email: 'pendingalum@personal.com',
       password: 'Password12345',
     });
-    expect(pendingLogin.status).toBe(200);
-    expect(pendingLogin.body.success).toBe(true);
-    expect(pendingLogin.body.data.accessToken).toBeDefined();
-    expect(pendingLogin.body.data.user.verificationStatus).toBe('pending');
+    expect(pendingLogin.status).toBe(403);
+    expect(pendingLogin.body.success).toBe(false);
+    expect(pendingLogin.body.error.code).toBe('EMAIL_VERIFICATION_REQUIRED');
 
     // Rejected login
     const rejectedLogin = await request(app).post('/api/v1/auth/login').send({

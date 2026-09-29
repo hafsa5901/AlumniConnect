@@ -117,11 +117,9 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await authService.register(formData);
-      const user = res.data.data.user;
-      localStorage.setItem('accessToken', res.data.data.accessToken);
-      toast.success('Registration submitted successfully!');
-      navigate('/verification-status', { state: { user, newlyRegistered: true } });
+      await authService.register(formData);
+      toast.success('Registration successful! Please check your email for the verification code.');
+      navigate('/verify-email', { state: { email: formData.email } });
     } catch (err: any) {
       const errData = err?.response?.data?.error;
       if (errData?.fields) {

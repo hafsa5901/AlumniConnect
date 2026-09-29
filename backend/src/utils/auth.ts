@@ -59,6 +59,24 @@ export function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw).digest('hex');
 }
 
+// ── 6-Digit OTP Utilities (Keyed HMAC-SHA256) ──────────────────────────────
+export function generateOtp(): string {
+  return crypto.randomInt(100000, 1000000).toString();
+}
+
+export function hashOtp(rawOtp: string): string {
+  return crypto.createHmac('sha256', env.OTP_HASH_SECRET).update(rawOtp).digest('hex');
+}
+
+export function compareOtp(rawOtp: string, storedHash: string): boolean {
+  if (!rawOtp || !storedHash) return false;
+  const computedHash = hashOtp(rawOtp);
+  const bufA = Buffer.from(computedHash, 'hex');
+  const bufB = Buffer.from(storedHash, 'hex');
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 export function isEmailInAllowedDomains(email: string): boolean {
   const domain = email.split('@')[1]?.toLowerCase();
   if (!domain) return false;
@@ -66,6 +84,8 @@ export function isEmailInAllowedDomains(email: string): boolean {
 }
 
 // Token expiry constants (ms)
+export const OTP_TTL                =       10 * 60 * 1000; // 10 min
+export const MAX_OTP_ATTEMPTS       =                    5;
 export const VERIFICATION_TOKEN_TTL = 24 * 60 * 60 * 1000; // 24 h
 export const RESET_TOKEN_TTL        =       60 * 60 * 1000; // 1 h
 export const REFRESH_TOKEN_TTL      =    7 * 24 * 60 * 60 * 1000; // 7 d

@@ -77,6 +77,7 @@ export const env = {
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || '',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
   TRUST_PROXY: process.env.TRUST_PROXY || 'false',
+  OTP_HASH_SECRET: process.env.OTP_HASH_SECRET || process.env.JWT_ACCESS_SECRET || 'alumniconnect-otp-secret-key-32chars!',
   // Rate limit overrides for test environments
   AUTH_RATE_LIMIT_DISABLED: process.env.AUTH_RATE_LIMIT_DISABLED === 'true',
 };

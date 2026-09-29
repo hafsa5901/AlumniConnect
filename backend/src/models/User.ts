@@ -66,6 +66,9 @@ export interface IUser extends Document {
   // Tokens (hashed — never raw)
   verificationTokenHash?: string;
   verificationTokenExpires?: Date;
+  emailVerificationOtpHash?: string;
+  emailVerificationOtpExpiresAt?: Date;
+  emailVerificationOtpAttempts?: number;
   resetTokenHash?: string;
   resetTokenExpires?: Date;
   refreshTokenHash?: string;
@@ -177,6 +180,9 @@ const UserSchema = new Schema<IUser>(
     // Token storage — hashed only, never raw
     verificationTokenHash: { type: String, select: false },
     verificationTokenExpires: { type: Date, select: false },
+    emailVerificationOtpHash: { type: String, select: false },
+    emailVerificationOtpExpiresAt: { type: Date, select: false },
+    emailVerificationOtpAttempts: { type: Number, default: 0, select: false },
     resetTokenHash: { type: String, select: false },
     resetTokenExpires: { type: Date, select: false },
     refreshTokenHash: { type: String, select: false },
@@ -195,6 +201,9 @@ const UserSchema = new Schema<IUser>(
         delete ret.passwordHash;
         delete ret.verificationTokenHash;
         delete ret.verificationTokenExpires;
+        delete ret.emailVerificationOtpHash;
+        delete ret.emailVerificationOtpExpiresAt;
+        delete ret.emailVerificationOtpAttempts;
         delete ret.resetTokenHash;
         delete ret.resetTokenExpires;
         delete ret.refreshTokenHash;
@@ -215,7 +224,7 @@ UserSchema.index(
 
 // ── Safe projection: fields returned to clients by default ───────────────────
 export const SAFE_USER_FIELDS =
-  '-passwordHash -verificationTokenHash -verificationTokenExpires -resetTokenHash -resetTokenExpires -refreshTokenHash -verificationNote -verificationDocUrl -resume.storagePath';
+  '-passwordHash -verificationTokenHash -verificationTokenExpires -emailVerificationOtpHash -emailVerificationOtpExpiresAt -emailVerificationOtpAttempts -resetTokenHash -resetTokenExpires -refreshTokenHash -verificationNote -verificationDocUrl -resume.storagePath';
 
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 export default User;

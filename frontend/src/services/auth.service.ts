@@ -44,6 +44,12 @@ export const authService = {
   resetPassword: (token: string, password: string) =>
     api.post('/auth/reset-password', { token, password }),
 
+  verifyOtp: (payload: { email: string; otp: string }) =>
+    api.post('/auth/verify-otp', payload),
+
+  resendOtp: (email: string) =>
+    api.post('/auth/resend-otp', { email }),
+
   verifyEmail: (token: string) =>
     api.post('/auth/verify-email', { token }),
 

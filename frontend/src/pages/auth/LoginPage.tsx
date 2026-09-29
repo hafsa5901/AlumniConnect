@@ -29,6 +29,11 @@ export default function LoginPage() {
       const errData = err?.response?.data?.error;
       const code = errData?.code || 'ERROR';
       const message = errData?.message || 'Login failed. Please check your credentials.';
+      if (code === 'EMAIL_VERIFICATION_REQUIRED') {
+        toast.error('Email verification required. Please enter your verification code.');
+        navigate('/verify-email', { state: { email: form.email } });
+        return;
+      }
       setErrorDetails({ code, message });
     } finally {
       setIsSubmitting(false);
