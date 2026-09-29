@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import path from 'path';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -36,7 +37,7 @@ if (env.TRUST_PROXY && env.TRUST_PROXY !== 'false') {
 }
 
 // ── Security headers ─────────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
 // ── CORS (explicit allowlist — no wildcard) ───────────────────────────────────
 app.use(
@@ -67,7 +68,14 @@ if (env.NODE_ENV !== 'test') {
 }
 
 // ── Static uploads ────────────────────────────────────────────────────────────
-app.use('/uploads', express.static('uploads'));
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(path.resolve(process.cwd(), 'uploads'))
+);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (_req: Request, res: Response) => {

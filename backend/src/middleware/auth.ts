@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { verifyAccessToken } from '../utils/auth';
-import User, { IUser, Role } from '../models/User';
+import User, { IUser, Role, AccountStatus, VerificationStatus, SAFE_USER_FIELDS } from '../models/User';
 import { createError } from './errorHandler';
 
 // Extend Request to carry the authenticated user
@@ -8,7 +9,22 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      user?: Pick<IUser, '_id' | 'name' | 'email' | 'role' | 'accountStatus' | 'verificationStatus' | 'college' | 'collegeDomainVerified'>;
+      user?: Partial<IUser> & {
+        _id: mongoose.Types.ObjectId;
+        name: string;
+        email: string;
+        role: Role;
+        accountStatus: AccountStatus;
+        verificationStatus: VerificationStatus;
+        college?: mongoose.Types.ObjectId;
+        collegeDomainVerified: boolean;
+        profilePhotoUrl?: string;
+        department?: string;
+        batch?: string;
+        bio?: string;
+        company?: string;
+        designation?: string;
+      };
     }
   }
 }
@@ -42,9 +58,7 @@ export async function authenticate(
     }
 
     // Load user — only safe fields, no hashes
-    const user = await User.findById(payload.userId).select(
-      '_id name email role accountStatus verificationStatus college collegeDomainVerified'
-    );
+    const user = await User.findById(payload.userId).select(SAFE_USER_FIELDS);
     if (!user) {
       return next(createError('User no longer exists.', 401, 'NOT_AUTHENTICATED'));
     }
@@ -59,14 +73,10 @@ export async function authenticate(
       );
     }
 
+    const userObj = user.toObject();
     req.user = {
+      ...userObj,
       _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      accountStatus: user.accountStatus,
-      verificationStatus: user.verificationStatus,
-      college: user.college,
       collegeDomainVerified: user.collegeDomainVerified ?? false,
     };
 

@@ -15,6 +15,10 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const [imgError, setImgError] = React.useState(false);
 
+  React.useEffect(() => {
+    setImgError(false);
+  }, [src]);
+
   const getInitials = (fullName: string) => {
     const parts = fullName.trim().split(' ').filter(Boolean);
     if (parts.length === 0) return 'U';
