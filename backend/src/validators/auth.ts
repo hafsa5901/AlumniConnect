@@ -98,14 +98,19 @@ export const forgotPasswordSchema = z.object({
 });
 
 // ── Reset password ─────────────────────────────────────────────────────────────
-export const resetPasswordSchema = z.object({
-  token: z.string({ required_error: 'Reset token is required.' }).min(1),
-  password: passwordSchema,
-  confirmPassword: z.string({ required_error: 'Please confirm your password.' }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match.',
-  path: ['confirmPassword'],
-});
+export const resetPasswordSchema = z
+  .object({
+    token: z.string({ required_error: 'Reset token is required.' }).min(1),
+    password: passwordSchema,
+    confirmPassword: z.string().optional(),
+  })
+  .refine(
+    (data) => !data.confirmPassword || data.password === data.confirmPassword,
+    {
+      message: 'Passwords do not match.',
+      path: ['confirmPassword'],
+    }
+  );
 
 // ── Change password ────────────────────────────────────────────────────────────
 export const changePasswordSchema = z

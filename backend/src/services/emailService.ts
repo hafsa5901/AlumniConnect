@@ -44,6 +44,11 @@ export function resolveTransportConfig(configOverrides?: {
   const smtpUser = configOverrides?.SMTP_USER ?? (configOverrides?.EMAIL_USER ?? (currentEnv.SMTP_USER || currentEnv.EMAIL_USER));
   const smtpPass = configOverrides?.SMTP_PASSWORD ?? (configOverrides?.EMAIL_PASSWORD ?? (currentEnv.SMTP_PASSWORD || currentEnv.EMAIL_PASSWORD));
 
+  // In test environment without explicit transport config overrides, use test transport
+  if (currentEnv.NODE_ENV === 'test' && !configOverrides?.SMTP_HOST && !configOverrides?.EMAIL_SERVICE) {
+    return { type: 'ethereal' };
+  }
+
   // 1. Direct SMTP server configuration
   if (currentEnv.SMTP_HOST && smtpUser && smtpPass) {
     return {
