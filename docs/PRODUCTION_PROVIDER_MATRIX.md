@@ -251,23 +251,29 @@ export interface IStorageService {
 
 ## 7. Cross-Provider Compatibility Checks
 
-1. **Backend Egress IPs vs MongoDB Atlas Network Access:**
-   - *Challenge:* Managed PaaS backends (Render, Railway, DO App Platform) utilize dynamic egress IP pools.
-   - *Resolution Options:*
-     - *Option 1 (Static Egress IP):* Enable Static Outbound IP add-on (Railway Pro or DO App Platform $25/mo) and whitelist exact `/32` IPs in MongoDB Atlas.
-     - *Option 2 (Strict Atlas Authentication with Wide Allowlist):* If using dynamic egress on starter tiers, configure `0.0.0.0/0` in Atlas Network Access while enforcing strict SCRAM-SHA-256 database authentication with a strong 64-character generated password, TLS 1.3 encryption, and least-privilege user scoping.
-     - *Option 3 (Dedicated Droplet/VPS):* Single static IPv4 address whitelisted directly in Atlas.
-2. **Outbound SMTP Port Policies:**
-   - Render Starter ($7/mo), Railway Pro, and DigitalOcean allow outbound connections on ports `465` and `587`. Port `25` is blocked across all cloud providers to prevent spam. Our SMTP configuration must use port `587` or `465`.
-3. **Region Colocation:**
-   - Backend compute, MongoDB Atlas cluster, and Object Storage bucket should all reside in the same geographic region (e.g., `us-east-1` N. Virginia or `eu-west-1` Ireland) to minimize inter-service latency (< 5ms) and eliminate cross-region egress data transfer charges.
-4. **Frontend & Backend Domain Alignment (Cookies & CORS):**
-   - Refresh tokens are transported via HTTP-only cookie with `sameSite: 'strict'` (`backend/src/utils/cookies.ts`).
-   - Browser security policies only send `sameSite: 'strict'` cookies when both frontend and API share the exact same registrable domain (e.g. `app.example.com` and `api.example.com`).
-   - *Requirement:* Production MUST configure custom subdomains under a shared apex domain rather than using disparate default provider subdomains (e.g., `alumni-ui.vercel.app` vs `alumni-api.onrender.com`).
-5. **Reverse Proxy & `TRUST_PROXY` Hop Count:**
-   - If placing Cloudflare CDN in front of the API Gateway, incoming traffic flows: `Client -> Cloudflare CDN -> Render/DO Load Balancer -> Node.js`.
-   - In this two-tier proxy topology, configure `TRUST_PROXY=2` (or Cloudflare IP range filtering) so Express correctly resolves `req.ip` for rate limiters from `X-Forwarded-For` without permitting client header spoofing.
+1. **Backend Egress IPs vs MongoDB Atlas Network Access (`VERIFIED-REPO` / `OWNER DECISION REQUIRED`):**
+   - *Challenge:* Managed PaaS backends (Render, Railway, DO App Platform) typically operate on dynamic outbound IP pools by default.
+   - *Security Hierarchy (Preferred to Fallback):*
+     - **1. Static Egress Allowlisting (Preferred):** Where the chosen compute tier provides static outbound IPs (e.g. Dedicated Droplet/VPS in Option C, or static egress IP add-ons on Railway Pro / DO App Platform), restrict MongoDB Atlas Network Access strictly to those specific `/32` IP addresses.
+     - **2. Private Networking / VPC Peering:** On dedicated infrastructure tiers that support it (e.g., AWS ECS to Atlas via AWS PrivateLink or VPC Peering), route database traffic through private endpoints without traversing the public internet.
+     - **3. Broad Network Fallback (`0.0.0.0/0` — Temporary / Last-Resort Only):** If a dynamic-egress starter plan is selected and no static egress IP or private network option exists, opening Atlas network access to `0.0.0.0/0` is a last-resort trade-off. **This is NOT considered standard or secure** and exposes the cluster endpoint to public network scanning; it requires mitigating controls including strong 64+ character generated SCRAM-SHA-256 database passwords, mandatory TLS 1.3 encryption, and strictly scoped database user privileges.
+2. **Outbound SMTP Port Policies (`VERIFIED-OFFICIAL`):**
+   - Cloud platforms universally block outbound traffic on standard SMTP port `25` to prevent spam abuse.
+   - Production SMTP configurations must specify `SMTP_PORT=587` (with `SMTP_SECURE=false` / STARTTLS) or `SMTP_PORT=465` (with `SMTP_SECURE=true` / Direct SSL), which are supported across Render (paid), Railway (Pro), DigitalOcean, and standard VPS instances.
+3. **Region Colocation & Egress (`OWNER DECISION REQUIRED`):**
+   - Co-locating backend compute, MongoDB database cluster, and Object Storage bucket within the same geographic cloud region (e.g., `us-east-1` N. Virginia or `eu-west-1` Ireland) generally reduces network round-trip latency and may minimize inter-region data transfer fees.
+   - *Note:* Actual latency numbers, transfer costs, and routing paths depend on provider network architecture, data transfer volumes, and active pricing schedules — verify during provisioning.
+4. **Frontend & Backend Domain Alignment (Cookies & CORS) (`VERIFIED-REPO`):**
+   - Refresh tokens are transported via HTTP-only cookie with `sameSite: 'strict'` on `/api/v1/auth` (`backend/src/utils/cookies.ts`).
+   - Standard browser security policies block `SameSite=Strict` cookies on cross-origin requests originating from different registrable domains.
+   - *Architecture Requirement:* Production deployment MUST co-locate frontend (`https://app.example.com`) and backend API (`https://api.example.com`) under subdomains of the same registrable apex domain, or proxy both behind a unified edge domain. Deploying across disparate default provider domains (e.g. `app.vercel.app` and `api.onrender.com`) is incompatible with the existing cookie configuration without changing security policies.
+5. **Reverse Proxy & `TRUST_PROXY` Configuration (`VERIFIED-REPO`):**
+   - `TRUST_PROXY` in `backend/src/app.ts:27-36` parses numeric hop counts, booleans, or subnet CIDRs.
+   - **No universal value exists:** The correct `TRUST_PROXY` value strictly depends on the ACTUAL number of reverse proxy hops in front of the Express process in the chosen production topology:
+     - Direct container/PaaS with single edge balancer (e.g., Render LB -> Node): `TRUST_PROXY=1`
+     - Two-tier proxy architecture (e.g., Cloudflare CDN -> Host Load Balancer -> Node): `TRUST_PROXY=2`
+     - Direct VPS binding with local Nginx: `TRUST_PROXY=1` or `TRUST_PROXY=loopback`
+   - *Risk of Misconfiguration:* If `TRUST_PROXY` is too high, clients can spoof `X-Forwarded-For` headers to bypass rate limits (`globalApiRateLimiter`, auth rate limiters) and forge security audit log IPs. If set too low or `false` behind a proxy, all client requests will share the load balancer's IP, causing collective rate-limiting throttling and breaking IP-based geolocation/auditing. The exact hop count must be verified against live proxy headers during deployment.
 
 ---
 
@@ -399,11 +405,20 @@ All provider facts and pricing limits were retrieved and verified from official 
 
 ## 10. Open Decisions for Project Owner
 
-The following architectural and operational decisions remain for the project owner to resolve before provisioning cloud infrastructure:
+The following architectural, operational, and financial decisions remain for the project owner to resolve before provisioning cloud infrastructure. No provider or SLA has been selected automatically:
 
-1. **Architecture Option Selection:** Choose between **Option A** (Fully Managed PaaS, ~$13-22/mo), **Option B** (Balanced High-Reliability Dedicated, ~$72-90/mo), or **Option C** (Self-Managed VPS, ~$14-19/mo).
-2. **Canonical Production Domain:** Select and register the production apex domain (e.g. `alumniconnect.edu` or `alumniconnect.org`).
-3. **Geographic Cloud Region:** Select primary cloud region (e.g. `us-east-1` US East, `eu-west-1` Europe West, or `ap-south-1` Mumbai) for colocation of compute, database, and storage.
-4. **Email Provider Selection:** Select transactional email vendor (Resend for clean developer DX, Brevo for predictable starter tiers, or AWS SES for high-volume rock-bottom unit pricing).
-5. **Private Storage Backend:** Select Cloudflare R2 (zero egress fees, S3 compatible) or AWS S3 Standard.
-6. **Data Protection & SLA Targets:** Confirm Recovery Point Objective (RPO <= 1 hr) and Recovery Time Objective (RTO <= 4 hrs) for institutional compliance.
+### Decision Matrix Status
+
+| Component / Parameter | Status | Trade-off / Decision Constraint |
+| :--- | :---: | :--- |
+| **Frontend Provider** | `OWNER DECISION REQUIRED` | Cloudflare Pages (free unlimited bandwidth, zero-config SPA) vs Vercel (requires `vercel.json` rewrites, $20/seat on Pro) vs Netlify (300 pooled credits). |
+| **Backend Provider** | `OWNER DECISION REQUIRED` | Render Starter ($7/mo, managed) vs Railway Pro ($20/mo) vs DigitalOcean App Platform ($5-$12/mo) vs Self-Managed VPS ($4-$12/mo). |
+| **Database Tier** | `OWNER DECISION REQUIRED` | MongoDB Atlas Flex (Serverless, pay-per-operation, daily snapshots) vs Atlas M10 Dedicated (~$57/mo, dedicated RAM, 1,500 conns, continuous PITR) vs Self-hosted on VPS. |
+| **Object Storage Provider** | `OWNER DECISION REQUIRED` | Cloudflare R2 (S3-compatible, zero egress fees, 10 GB free) vs Amazon S3 Standard ($0.023/GB-mo + request/egress costs). |
+| **Transactional Email Provider** | `OWNER DECISION REQUIRED` | Resend (3,000 free/mo, $20/mo Pro) vs Brevo ($9/mo Starter) vs AWS SES ($0.10/1k emails, requires sandbox approval). |
+| **DNS & Apex Domain** | `OWNER DECISION REQUIRED` | Institutional apex domain registration (e.g. `alumniconnect.edu`) and registrar/DNS management (Cloudflare at-cost vs conventional registrar). |
+| **Primary Cloud Region** | `OWNER DECISION REQUIRED` | Geographic location for compute, database, and storage colocation (`us-east-1`, `eu-west-1`, `ap-south-1`, etc.) balancing latency and compliance. |
+| **Recovery Point Objective (RPO)**| `OWNER DECISION REQUIRED` | Target maximum acceptable data loss window in the event of disaster (e.g. RPO <= 1 hr requires continuous oplog/PITR; RPO <= 24 hrs allows daily snapshots). |
+| **Recovery Time Objective (RTO)** | `OWNER DECISION REQUIRED` | Target maximum acceptable downtime to restore services from backup (e.g. RTO <= 4 hrs requires automated IaC/PaaS restores; manual VPS restore takes longer). |
+| **Backup Retention & Testing** | `OWNER DECISION REQUIRED` | Snapshot retention period (e.g. 30 days vs 90 days) and cadence for non-production restore rehearsals. |
+

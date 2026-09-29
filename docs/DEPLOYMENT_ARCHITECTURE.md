@@ -211,13 +211,16 @@
 ### Required External Infrastructure (Not Provisioned)
 - **Database Backup:** Automated daily snapshot backups with 30-day retention and continuous Point-in-Time Recovery (PITR).
 - **Private Document Backup:** Versioning enabled on private object storage bucket with cross-region replication for disaster resilience.
-- **Recovery Targets (Owner Decision):**
-  - **RPO (Recovery Point Objective):** Target <= 1 hour via continuous oplog replication.
-  - **RTO (Recovery Time Objective):** Target <= 4 hours to provision replacement compute and restore database.
+- **Recovery Targets (`OWNER DECISION REQUIRED`):**
+  - **RPO (Recovery Point Objective):** Target maximum acceptable data loss window (e.g. continuous PITR vs daily snapshots) to be determined by owner.
+  - **RTO (Recovery Time Objective):** Target maximum acceptable recovery time to restore services to be determined by owner.
 
 ---
 
 ## 14. Deployment Sequence (Step-by-Step)
+
+> For the comprehensive, updated production deployment checklist, rollback runbooks, and smoke tests, see:  
+> 👉 **[docs/PRODUCTION_ARCHITECTURE_FINAL.md](file:///c:/Users/Admin/OneDrive/Desktop/alumanti2/docs/PRODUCTION_ARCHITECTURE_FINAL.md)**
 
 ```
 [1. DNS & Domain Setup]
@@ -241,7 +244,7 @@
        │ Verification Gate: GET https://api.example.com/api/health returns 200 OK
        ▼
 [6. Admin Account Bootstrap]
-       │ Action: Run seed script (npm run seed:admin) or create first admin account
+       │ Action: Run seed script (npm run seed:admin) with ALLOW_PROD_SEED=true
        ▼
 [7. Frontend Build & Deploy]
        │ Action: Build frontend SPA with VITE_API_URL and VITE_SOCKET_URL
@@ -254,69 +257,46 @@
 
 - **Frontend Rollback:** Re-point CDN / web host deployment to previous static release commit (instant, zero downtime).
 - **Backend Rollback:** Re-deploy previous container image / git commit tag.
-- **Database Rollback:** If schema backwards-incompatible migrations occurred, restore point-in-time snapshot prior to deploy timestamp.
+- **Database Rollback:** Database changes are not automatically reversible via code rollback alone; restore point-in-time snapshot prior to deploy timestamp if required.
 - **Git Hygiene:** Always use `git revert <commit-hash>` rather than destructive history rewrites (`git reset --hard` / force push).
 
 ---
 
 ## 16. Production Smoke Test Runbook
 
-| Test Category | Action | Endpoint / Surface | Expected Result |
-| :--- | :--- | :--- | :--- |
-| **System Health** | Send GET request | `GET /api/health` | HTTP `200 OK` with `{ status: "ok" }` |
-| **Registration** | Register student account | `POST /api/v1/auth/register` | User created; email verification token generated |
-| **Email Verification** | Click token link | `POST /api/v1/auth/verify-email` | Account standing updates to `email_verified` |
-| **Affiliation Verification** | Submit college & proof | `POST /api/v1/verification-requests` | Verification request created in `pending` status |
-| **Admin Review** | Review & approve request | `PATCH /api/v1/admin/verification-requests/:id/approve` | Request status becomes `approved`; user becomes `admin_approved` |
-| **Private File Security** | Request document as stranger | `GET /api/v1/verification-requests/:id/document` | HTTP `404 DOCUMENT_NOT_FOUND` (existence hidden) |
-| **Real-Time Messaging** | Exchange chat message | WebSocket `message:send` | Message persisted in MongoDB and emitted instantly via `message:new` |
-| **Rate Limiting** | Spam invalid logins | `POST /api/v1/auth/login` | HTTP `429 Too Many Requests` envelope returned |
+> For the full production smoke test checklist, see:  
+> 👉 **[docs/PRODUCTION_ARCHITECTURE_FINAL.md#10-production-smoke-test-checklist](file:///c:/Users/Admin/OneDrive/Desktop/alumanti2/docs/PRODUCTION_ARCHITECTURE_FINAL.md#10-production-smoke-test-checklist)**
 
 ---
 
 ## 17. External Infrastructure Not Yet Provisioned
 
 1. **MongoDB Atlas Database Cluster**
-2. **Transactional SMTP Service (SendGrid/Mailgun/SES)**
-3. **Private Object Storage Bucket (AWS S3/Cloudflare R2)**
-4. **Backend Application Compute Host (ECS/Cloud Run/VPS)**
-5. **Frontend Static CDN Host (Cloudflare Pages/Vercel/S3)**
+2. **Transactional SMTP Service (Resend / Brevo / SES)**
+3. **Private Object Storage Bucket (Cloudflare R2 / AWS S3)**
+4. **Backend Application Compute Host (Render / Railway / DO / VPS)**
+5. **Frontend Static CDN Host (Cloudflare Pages / Vercel / Netlify)**
 6. **Production Domain Names & DNS Nameservers**
 7. **APM & Centralized Logging Service**
 
 ---
 
-## 18. Infrastructure Options Comparison
+## 18. Open Decisions for Project Owner
 
-| Dimension | Option A: Fully Managed (PaaS / Serverless) | Option B: Container / VPS (Self-Managed) | Option C: Hybrid Architecture (Recommended) |
-| :--- | :--- | :--- | :--- |
-| **Compute & Host** | Vercel (Frontend) + Render / Heroku (Backend) | Single Ubuntu VPS (Nginx + PM2 + Docker) | Cloudflare Pages (Frontend) + AWS ECS / DigitalOcean App (Backend) |
-| **Database** | MongoDB Atlas Serverless / Shared | Self-hosted MongoDB on VPS | MongoDB Atlas Dedicated Cluster (M10+) |
-| **Operational Overhead**| **Low** (Automated builds, managed SSL) | **High** (Manual OS patching, SSL renewal, firewall config) | **Medium** (Standardized containers, managed database) |
-| **WebSocket Support** | Partial (Requires long-running compute tier) | Native (Configured via Nginx proxy) | Native (Full persistent WebSocket support) |
-| **Scaling Capability** | High (Instant auto-scaling) | Limited (Vertical scaling / manual multi-node) | High (Independent frontend edge & container autoscaling) |
-| **Cost Profile** | Pay-per-usage / Higher per-unit cost | Fixed low baseline / Higher ops labor | Balanced cost-to-performance ratio |
+> All provider selections and SLA targets remain open for the owner. See:  
+> 👉 **[docs/PRODUCTION_ARCHITECTURE_FINAL.md#11-final-provider-decision-matrix](file:///c:/Users/Admin/OneDrive/Desktop/alumanti2/docs/PRODUCTION_ARCHITECTURE_FINAL.md#11-final-provider-decision-matrix)**
 
 ---
 
-## 19. Open Decisions for Project Owner
-
-1. **Hosting Architecture Selection:** Choose Option A (PaaS), Option B (VPS), or Option C (Hybrid Cloud).
-2. **Production Domain Selection:** Select canonical apex domain (e.g. `alumniconnect.edu`).
-3. **Cloud Region & Data Residency:** Select geographic cloud region (e.g. `us-east-1`, `eu-west-1`, or `ap-south-1`).
-4. **Transactional Email Provider:** Select provider account (SendGrid, Mailgun, AWS SES, or Postmark).
-5. **RPO / RTO Target SLA:** Formally establish data recovery objectives for institutional compliance.
-
----
-
-## 20. Appendix: Frontend Observations (Read-Only — Not Modified)
+## 19. Appendix: Frontend Observations (Read-Only — Not Modified)
 
 1. **SPA Catch-All Route Rewrites:**  
    *File:* `frontend/src/routes/AppRoutes.tsx`  
-   *Observation:* React Router requires web server rewrite configuration (`/* -> /index.html`) on static hosts.
+   *Observation:* React Router requires web server rewrite configuration (`/* -> /index.html`) on static hosts. Cloudflare Pages handles this automatically with zero config.
 2. **WebSocket URL Configuration:**  
    *File:* `frontend/src/services/messaging.ts:134`  
-   *Observation:* Production builds must provide `VITE_SOCKET_URL=https://api.yourdomain.com` to prevent mixed-content protocol warnings under HTTPS.
+   *Observation:* Production builds must provide `VITE_SOCKET_URL=https://api.example.com` to prevent mixed-content protocol warnings under HTTPS.
 3. **Modal Close Button Accessibility:**  
    *File:* `frontend/src/components/ui/Modal.tsx`  
    *Observation:* Adding explicit `aria-label="Close dialog"` is recommended for screen readers in future UI enhancements.
+
