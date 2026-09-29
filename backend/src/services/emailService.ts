@@ -41,29 +41,32 @@ export function resolveTransportConfig(configOverrides?: {
     EMAIL_PASSWORD: configOverrides?.EMAIL_PASSWORD ?? env.EMAIL_PASSWORD,
   };
 
-  const user = currentEnv.SMTP_USER || currentEnv.EMAIL_USER;
-  const pass = currentEnv.SMTP_PASSWORD || currentEnv.EMAIL_PASSWORD;
+  const smtpUser = configOverrides?.SMTP_USER ?? (configOverrides?.EMAIL_USER ?? (currentEnv.SMTP_USER || currentEnv.EMAIL_USER));
+  const smtpPass = configOverrides?.SMTP_PASSWORD ?? (configOverrides?.EMAIL_PASSWORD ?? (currentEnv.SMTP_PASSWORD || currentEnv.EMAIL_PASSWORD));
 
   // 1. Direct SMTP server configuration
-  if (currentEnv.SMTP_HOST && user && pass) {
+  if (currentEnv.SMTP_HOST && smtpUser && smtpPass) {
     return {
       type: 'smtp',
       options: {
         host: currentEnv.SMTP_HOST,
         port: currentEnv.SMTP_PORT,
         secure: currentEnv.SMTP_SECURE,
-        auth: { user, pass },
+        auth: { user: smtpUser, pass: smtpPass },
       },
     };
   }
 
+  const serviceUser = configOverrides?.EMAIL_USER ?? (configOverrides?.SMTP_USER ?? (currentEnv.EMAIL_USER || currentEnv.SMTP_USER));
+  const servicePass = configOverrides?.EMAIL_PASSWORD ?? (configOverrides?.SMTP_PASSWORD ?? (currentEnv.EMAIL_PASSWORD || currentEnv.SMTP_PASSWORD));
+
   // 2. Pre-configured email service provider (e.g. sendgrid, gmail, etc.)
-  if (currentEnv.EMAIL_SERVICE && user && pass) {
+  if (currentEnv.EMAIL_SERVICE && serviceUser && servicePass) {
     return {
       type: 'service',
       options: {
         service: currentEnv.EMAIL_SERVICE,
-        auth: { user, pass },
+        auth: { user: serviceUser, pass: servicePass },
       },
     };
   }
@@ -136,6 +139,56 @@ export async function getTransporter(): Promise<nodemailer.Transporter> {
  */
 export function resetTransporterForTest(): void {
   transporter = null;
+}
+
+/**
+ * Safely verifies the SMTP connection without logging or exposing sensitive credentials.
+ */
+export async function verifyTransporterConnection(): Promise<{
+  success: boolean;
+  type: 'smtp' | 'service' | 'ethereal' | 'console';
+  host?: string;
+  port?: number;
+  secure?: boolean;
+  user?: string;
+  passwordConfigured: boolean;
+  error?: string;
+}> {
+  const resolved = resolveTransportConfig();
+  const passwordConfigured = Boolean(env.SMTP_PASSWORD || env.EMAIL_PASSWORD);
+
+  if (resolved.type === 'smtp' || resolved.type === 'service') {
+    try {
+      const t = await getTransporter();
+      await t.verify();
+      return {
+        success: true,
+        type: resolved.type,
+        host: resolved.options?.host,
+        port: resolved.options?.port,
+        secure: resolved.options?.secure,
+        user: resolved.options?.auth?.user,
+        passwordConfigured,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        type: resolved.type,
+        host: resolved.options?.host,
+        port: resolved.options?.port,
+        secure: resolved.options?.secure,
+        user: resolved.options?.auth?.user,
+        passwordConfigured,
+        error: err?.message || String(err),
+      };
+    }
+  }
+
+  return {
+    success: true,
+    type: resolved.type,
+    passwordConfigured,
+  };
 }
 
 // Dev console fallback — logs metadata safely without exposing raw tokens/OTPs
