@@ -15,43 +15,57 @@ import mongoose from 'mongoose';
 import User from './models/User';
 import { hashPassword } from './utils/auth';
 
-async function seedAdmin() {
-  const mongoUri = process.env.MONGODB_URI;
-  if (!mongoUri) {
-    console.error('❌ MONGODB_URI not set. Aborting seed.');
-    process.exit(1);
+export interface SeedAdminOptions {
+  mongoUri?: string;
+  nodeEnv?: string;
+  allowProdSeed?: string;
+  adminEmail?: string;
+  adminPassword?: string;
+  disconnectAfter?: boolean;
+}
+
+export async function seedAdminCore(options?: SeedAdminOptions): Promise<{ created: boolean; email: string }> {
+  const nodeEnv = options?.nodeEnv ?? process.env.NODE_ENV ?? 'development';
+  const allowProdSeed = options?.allowProdSeed ?? process.env.ALLOW_PROD_SEED;
+  const adminEmail = options?.adminEmail ?? process.env.ADMIN_EMAIL;
+  const adminPassword = options?.adminPassword ?? process.env.ADMIN_PASSWORD;
+  const mongoUri = options?.mongoUri ?? process.env.MONGODB_URI;
+
+  if (!mongoUri && mongoose.connection.readyState === 0) {
+    throw new Error('MONGODB_URI not set. Aborting seed.');
   }
 
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
-    console.error('❌ Seed script must not run in production without ALLOW_PROD_SEED=true.');
-    process.exit(1);
+  if (nodeEnv === 'production' && allowProdSeed !== 'true') {
+    throw new Error('Seed script must not run in production without ALLOW_PROD_SEED=true.');
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (process.env.NODE_ENV === 'production' && (!adminEmail || !adminPassword)) {
-    console.error('❌ In production, ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be explicitly defined. Aborting seed.');
-    process.exit(1);
+  if (nodeEnv === 'production' && (!adminEmail || !adminEmail.trim() || !adminPassword || !adminPassword.trim())) {
+    throw new Error('In production, ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be explicitly defined. Aborting seed.');
   }
 
   if (!adminEmail || !adminPassword) {
-    console.warn('⚠️  ADMIN_EMAIL or ADMIN_PASSWORD not set in .env.');
-    console.warn('   Using development defaults: admin@alumniconnect.local / Admin123456');
-    console.warn('   CHANGE THESE BEFORE GOING TO PRODUCTION.\n');
+    if (nodeEnv !== 'test') {
+      console.warn('⚠️  ADMIN_EMAIL or ADMIN_PASSWORD not set in .env.');
+      console.warn('   Using development defaults: admin@alumniconnect.local');
+    }
   }
 
-  const email = adminEmail || 'admin@alumniconnect.local';
+  const email = (adminEmail || 'admin@alumniconnect.local').trim().toLowerCase();
   const password = adminPassword || 'Admin123456';
 
-  await mongoose.connect(mongoUri);
-  console.log('✅ MongoDB connected');
+  if (mongoose.connection.readyState === 0 && mongoUri) {
+    await mongoose.connect(mongoUri);
+  }
 
   const existingAdmin = await User.findOne({ role: 'admin' });
   if (existingAdmin) {
-    console.log(`ℹ️  Admin already exists: ${existingAdmin.email}. Skipping.`);
-    await mongoose.disconnect();
-    return;
+    if (nodeEnv !== 'test') {
+      console.log(`ℹ️  Admin already exists: ${existingAdmin.email}. Skipping.`);
+    }
+    if (options?.disconnectAfter) {
+      await mongoose.disconnect();
+    }
+    return { created: false, email: existingAdmin.email };
   }
 
   const passwordHash = await hashPassword(password);
@@ -67,15 +81,22 @@ async function seedAdmin() {
     batch: '2024',
   });
 
-  console.log('\n✅ Admin user created:');
-  console.log(`   Email:    ${email}`);
-  console.log(`   Password: ${adminPassword ? '[from env]' : password}`);
-  console.log('\n🔒 Change this password immediately if using the default.');
+  if (nodeEnv !== 'test') {
+    console.log('\n✅ Admin user created:');
+    console.log(`   Email:    ${email}`);
+    console.log('   Password: [CONFIGURED IN ENVIRONMENT]');
+  }
 
-  await mongoose.disconnect();
+  if (options?.disconnectAfter) {
+    await mongoose.disconnect();
+  }
+
+  return { created: true, email };
 }
 
-seedAdmin().catch((err) => {
-  console.error('❌ Seed failed:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  seedAdminCore({ disconnectAfter: true }).catch((err) => {
+    console.error('❌ Seed failed:', err.message || err);
+    process.exit(1);
+  });
+}
