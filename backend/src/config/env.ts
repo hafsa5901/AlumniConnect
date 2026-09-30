@@ -61,9 +61,11 @@ export const env = {
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   APP_BASE_URL: process.env.APP_BASE_URL || process.env.CLIENT_URL || 'http://localhost:5173',
   CLIENT_URL: process.env.APP_BASE_URL || process.env.CLIENT_URL || 'http://localhost:5173',
-  COLLEGE_EMAIL_DOMAINS: (process.env.COLLEGE_EMAIL_DOMAINS || 'college.edu,university.edu')
+  COLLEGE_EMAIL_DOMAINS: (process.env.STUDENT_EMAIL_DOMAIN || process.env.COLLEGE_EMAIL_DOMAINS || 'gndecb.ac.in')
     .split(',')
-    .map((d) => d.trim().toLowerCase()),
+    .map((d) => d.trim().toLowerCase())
+    .filter(Boolean),
+  STUDENT_EMAIL_DOMAIN: (process.env.STUDENT_EMAIL_DOMAIN || 'gndecb.ac.in').toLowerCase().trim(),
   STUDENT_REQUIRES_ADMIN_APPROVAL: process.env.STUDENT_REQUIRES_ADMIN_APPROVAL === 'true',
   SMTP_HOST: process.env.SMTP_HOST || '',
   SMTP_PORT: parseInt(process.env.SMTP_PORT || '587', 10),

@@ -76,7 +76,7 @@ describe('Phase 7B — Secure Admin Identity, Access Control & Governance Tests'
     it('allows valid student registration with institutional email', async () => {
       const res = await request(app).post('/api/v1/auth/register').send({
         name: 'Valid Student',
-        email: 'valid.student@college.edu',
+        email: 'valid.student@gndecb.ac.in',
         password: 'SecurePassword123',
         confirmPassword: 'SecurePassword123',
         role: 'student',

@@ -18,7 +18,7 @@ import {
 import toast from 'react-hot-toast';
 import { Button, Input, Select, Textarea, Card, Badge } from '../../components/ui';
 
-const ALLOWED_DOMAINS = ['college.edu', 'university.edu'];
+const ALLOWED_DOMAINS = ['gndecb.ac.in'];
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ export default function RegisterPage() {
     if (!formData.batch.trim()) errors.batch = 'Batch / Year is required.';
 
     if (formData.role === 'student' && !isInstitutional) {
-      errors.email = `Students must register with an institutional email (${ALLOWED_DOMAINS.join(', ')}). Your current email is ${formData.email}.`;
+      errors.email = `Students must register with their GNDEC institutional email (@${ALLOWED_DOMAINS[0]}). Your current email is ${formData.email}.`;
     }
 
     setFieldErrors(errors);
@@ -232,11 +232,11 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   label="Email Address"
-                  placeholder="sjenkins@college.edu or personal@gmail.com"
+                  placeholder="student@gndecb.ac.in (or personal email for alumni)"
                   leftIcon={<Mail className="w-4 h-4" />}
                   value={formData.email}
                   error={fieldErrors.email}
-                  helperText="Institutional emails (@college.edu, @university.edu) receive instant domain verification."
+                  helperText="Students must use their GNDEC institutional email (@gndecb.ac.in). Alumni may use personal or institutional email."
                   onChange={(e) => updateField('email', e.target.value)}
                   required
                 />
@@ -291,7 +291,7 @@ export default function RegisterPage() {
                   >
                     <GraduationCap className={`w-6 h-6 mb-2 ${formData.role === 'student' ? 'text-navy-900' : 'text-slate-400'}`} />
                     <div className="font-bold text-xs text-navy-900">Current Student</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Requires institutional email domain</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Requires @gndecb.ac.in email</div>
                   </button>
 
                   <button
@@ -315,7 +315,7 @@ export default function RegisterPage() {
                     <div>
                       <span className="font-bold">Institutional Email Required for Students:</span>
                       <p className="mt-0.5 text-[11px] text-amber-800">
-                        Student accounts must use an institutional email ending in <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">@college.edu</code> or <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">@university.edu</code>.
+                        Student accounts must use a GNDEC institutional email ending in <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">@gndecb.ac.in</code>.
                         You entered <span className="font-mono font-semibold">{formData.email || 'a non-institutional email'}</span>.
                       </p>
                       <div className="mt-2 flex gap-3">

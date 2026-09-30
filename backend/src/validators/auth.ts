@@ -1,11 +1,13 @@
 import { z } from 'zod';
+import { isEmailInAllowedDomains } from '../utils/auth';
 
 // ── Shared field schemas ──────────────────────────────────────────────────────
-const emailSchema = z
-  .string({ required_error: 'Email is required.' })
-  .email('Please enter a valid email address.')
-  .toLowerCase()
-  .trim();
+const emailSchema = z.preprocess(
+  (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+  z
+    .string({ required_error: 'Email is required.' })
+    .email('Please enter a valid email address.')
+);
 
 const passwordSchema = z
   .string({ required_error: 'Password is required.' })
@@ -47,7 +49,19 @@ export const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match.',
     path: ['confirmPassword'],
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.role === 'student') {
+        return isEmailInAllowedDomains(data.email);
+      }
+      return true;
+    },
+    {
+      message: 'Students must register using their GNDEC institutional email address (@gndecb.ac.in).',
+      path: ['email'],
+    }
+  );
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 

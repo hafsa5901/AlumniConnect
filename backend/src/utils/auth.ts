@@ -78,7 +78,11 @@ export function compareOtp(rawOtp: string, storedHash: string): boolean {
 }
 
 export function isEmailInAllowedDomains(email: string): boolean {
-  const domain = email.split('@')[1]?.toLowerCase();
+  if (!email || typeof email !== 'string') return false;
+  const normalized = email.trim().toLowerCase();
+  const parts = normalized.split('@');
+  if (parts.length !== 2) return false;
+  const domain = parts[1].trim();
   if (!domain) return false;
   return env.COLLEGE_EMAIL_DOMAINS.includes(domain);
 }

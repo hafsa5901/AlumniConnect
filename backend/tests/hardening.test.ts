@@ -167,7 +167,7 @@ describe('Phase 2 Hardening & Security Checks', () => {
   it('Hardening: Tokens and passwords stored as hashes only (never raw) in DB', async () => {
     const regRes = await request(app).post('/api/v1/auth/register').send({
       name: 'Hash Checker',
-      email: 'hashcheck@college.edu',
+      email: 'hashcheck@gndecb.ac.in',
       password: 'MyPassword123',
       confirmPassword: 'MyPassword123',
       role: 'student',
@@ -175,7 +175,7 @@ describe('Phase 2 Hardening & Security Checks', () => {
       batch: '2025',
     });
 
-    const userInDb = await User.findOne({ email: 'hashcheck@college.edu' }).select(
+    const userInDb = await User.findOne({ email: 'hashcheck@gndecb.ac.in' }).select(
       '+passwordHash +verificationTokenHash +emailVerificationOtpHash +refreshTokenHash +resetTokenHash'
     );
 

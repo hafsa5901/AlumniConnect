@@ -63,6 +63,7 @@ export async function registerUser(input: RegisterInput): Promise<{
 }> {
   const { name, email, password, role, department, batch, institution,
           studentId, alumniId, graduationYear, degree, proofNote } = input;
+  const normalizedEmail = (email || '').trim().toLowerCase();
 
   // Block admin registration at public endpoint
   if ((role as string) === 'admin') {
@@ -73,20 +74,21 @@ export async function registerUser(input: RegisterInput): Promise<{
     );
   }
 
-  const isInstitutional = isEmailInAllowedDomains(email);
+  const isInstitutional = isEmailInAllowedDomains(normalizedEmail);
 
   // Students must have an institutional email
   if (role === 'student' && !isInstitutional) {
     throw createError(
-      'Students must register with an institutional email address (' +
-        env.COLLEGE_EMAIL_DOMAINS.join(', ') + ').',
+      'Students must register using their GNDEC institutional email address (@' +
+        (env.STUDENT_EMAIL_DOMAIN || 'gndecb.ac.in') +
+        ').',
       422,
-      'INVALID_EMAIL_DOMAIN'
+      'INSTITUTIONAL_EMAIL_REQUIRED'
     );
   }
 
   // Check uniqueness (clean 409 instead of Mongo duplicate-key error)
-  const existing = await User.findOne({ email });
+  const existing = await User.findOne({ email: normalizedEmail });
   if (existing) {
     throw createError('An account with this email already exists.', 409, 'EMAIL_ALREADY_EXISTS');
   }
@@ -104,7 +106,7 @@ export async function registerUser(input: RegisterInput): Promise<{
 
   const user = await User.create({
     name,
-    email,
+    email: normalizedEmail,
     passwordHash,
     role,
     department,
@@ -128,12 +130,12 @@ export async function registerUser(input: RegisterInput): Promise<{
   });
 
   // Send OTP email (async, don't block registration on email failure)
-  sendOtpVerificationEmail(email, name, rawOtp).catch((err) =>
+  sendOtpVerificationEmail(normalizedEmail, name, rawOtp).catch((err) =>
     console.error('[REGISTER] Failed to send OTP email:', err?.message || err)
   );
 
   // Also send legacy link email if required
-  sendVerificationEmail(email, name, rawVerificationToken).catch(() => {});
+  sendVerificationEmail(normalizedEmail, name, rawVerificationToken).catch(() => {});
 
   return {
     user: safeUser(user),
