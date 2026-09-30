@@ -109,8 +109,8 @@ For every component in the AlumniConnect ecosystem, the boundary between what is
 - **Transport Engine (`VERIFIED-REPO`):** Nodemailer configured via `backend/src/services/emailService.ts`.
 - **Required Production Variables (`VERIFIED-REPO`):**
   - `SMTP_HOST`: Hostname of SMTP relay (e.g. `smtp.resend.com`, `smtp-relay.brevo.com`).
-  - `SMTP_PORT`: `587` (STARTTLS) or `465` (SSL).
-  - `SMTP_SECURE`: `false` for port 587, `true` for port 465.
+  - `SMTP_PORT`: `2465` (SSL — Render Free workaround), `465` (SSL), or `587` (STARTTLS).
+  - `SMTP_SECURE`: `true` for port 2465 and 465, `false` for port 587.
   - `SMTP_USER`: SMTP username or API key.
   - `SMTP_PASSWORD`: SMTP secret key or password.
   - `EMAIL_FROM`: Sender RFC 5322 header (e.g. `"AlumniConnect" <noreply@example.com>`).
@@ -135,9 +135,9 @@ For every component in the AlumniConnect ecosystem, the boundary between what is
 | `CLIENT_URL` | DEPLOY-TIME | **Yes** | `https://app.example.com` | Exact CORS origin allowlist for API and WebSockets (`backend/src/config/env.ts:62`). |
 | `COLLEGE_EMAIL_DOMAINS` | DEPLOY-TIME | No | `college.edu,university.edu` | Fallback accepted institutional domains (`backend/src/config/env.ts:63-65`). |
 | `STUDENT_REQUIRES_ADMIN_APPROVAL` | DEPLOY-TIME | No | `false` | Student manual verification requirement flag (`backend/src/config/env.ts:66`). |
-| `SMTP_HOST` | DEPLOY-TIME | **Yes** (Prod) | `smtp.example.com` | Outgoing SMTP server hostname (`backend/src/config/env.ts:67`). |
-| `SMTP_PORT` | DEPLOY-TIME | **Yes** (Prod) | `587` | Outgoing SMTP server port (`backend/src/config/env.ts:68`). |
-| `SMTP_SECURE` | DEPLOY-TIME | No | `false` | TLS mode (`true` for 465, `false` for 587) (`backend/src/config/env.ts:69`). |
+| `SMTP_HOST` | DEPLOY-TIME | **Yes** (Prod) | `smtp.resend.com` | Outgoing SMTP server hostname (`backend/src/config/env.ts:67`). |
+| `SMTP_PORT` | DEPLOY-TIME | **Yes** (Prod) | `2465` | Outgoing SMTP server port (`2465` SSL for Render Free, `465` SSL, or `587` STARTTLS) (`backend/src/config/env.ts:68`). |
+| `SMTP_SECURE` | DEPLOY-TIME | No | `true` | TLS mode (`true` for 2465/465, `false` for 587) (`backend/src/config/env.ts:69`). |
 | `SMTP_USER` | **SECRET** | **Yes** (Prod) | `smtp-user` | Outgoing SMTP username (`backend/src/config/env.ts:70`). |
 | `SMTP_PASSWORD` | **SECRET** | **Yes** (Prod) | `smtp-password` | Outgoing SMTP password (`backend/src/config/env.ts:71`). |
 | `EMAIL_FROM` | DEPLOY-TIME | No | `"AlumniConnect" <noreply@example.com>` | Outgoing sender header (`backend/src/config/env.ts:75`). |

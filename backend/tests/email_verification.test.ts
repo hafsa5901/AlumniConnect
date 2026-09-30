@@ -84,6 +84,51 @@ describe('Phase 7A — Production-Ready Email Verification & Transport Tests', (
       });
     });
 
+    it('selects direct custom SMTP configuration on port 2465 with implicit SSL (Render Free workaround)', async () => {
+      const mockCreateTransport = jest.spyOn(nodemailer, 'createTransport').mockReturnValue({
+        sendMail: jest.fn().mockResolvedValue({ messageId: 'mock-smtp-2465-msg' }),
+      } as any);
+
+      const resolved = resolveTransportConfig({
+        NODE_ENV: 'production',
+        SMTP_HOST: 'smtp.resend.com',
+        SMTP_PORT: 2465,
+        SMTP_SECURE: true,
+        SMTP_USER: 'resend',
+        SMTP_PASSWORD: 'test-resend-api-key',
+      });
+
+      expect(resolved.type).toBe('smtp');
+      expect(resolved.options).toEqual({
+        host: 'smtp.resend.com',
+        port: 2465,
+        secure: true,
+        auth: {
+          user: 'resend',
+          pass: 'test-resend-api-key',
+        },
+      });
+
+      await createTransporter({
+        NODE_ENV: 'production',
+        SMTP_HOST: 'smtp.resend.com',
+        SMTP_PORT: 2465,
+        SMTP_SECURE: true,
+        SMTP_USER: 'resend',
+        SMTP_PASSWORD: 'test-resend-api-key',
+      });
+
+      expect(mockCreateTransport).toHaveBeenCalledWith({
+        host: 'smtp.resend.com',
+        port: 2465,
+        secure: true,
+        auth: {
+          user: 'resend',
+          pass: 'test-resend-api-key',
+        },
+      });
+    });
+
     it('selects pre-configured service transport when EMAIL_SERVICE and credentials are provided', async () => {
       const mockCreateTransport = jest.spyOn(nodemailer, 'createTransport').mockReturnValue({
         sendMail: jest.fn().mockResolvedValue({ messageId: 'mock-service-msg' }),

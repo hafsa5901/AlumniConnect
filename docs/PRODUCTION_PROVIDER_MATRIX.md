@@ -52,7 +52,7 @@ Before evaluating cloud providers, the repository's concrete runtime profile and
 
 ### 1.5 Transactional Email & Deliverability
 - **Engine:** `nodemailer` `^6.9.16` (`backend/package.json:27`).
-- **Configuration:** Configured in `backend/src/services/emailService.ts` via standard SMTP parameters: `SMTP_HOST`, `SMTP_PORT` (default `587`), `SMTP_SECURE` (`true` for 465, `false` for 587/STARTTLS), `SMTP_USER`, `SMTP_PASSWORD`, and `EMAIL_FROM`.
+- **Configuration:** Configured in `backend/src/services/emailService.ts` via standard SMTP parameters: `SMTP_HOST`, `SMTP_PORT` (default `587`; use `2465` or `465` for SSL, `587` for STARTTLS), `SMTP_SECURE` (`true` for 2465/465, `false` for 587/STARTTLS), `SMTP_USER`, `SMTP_PASSWORD`, and `EMAIL_FROM`.
 - **Validation:** Enforces production SMTP validation when `REQUIRE_PROD_EMAIL=true` or `SMTP_REQUIRED=true` (`backend/src/config/env.ts:39-45`).
 
 ### 1.6 Authentication & Cross-Origin Architecture
@@ -144,7 +144,7 @@ Before evaluating cloud providers, the repository's concrete runtime profile and
 | Feature / Criteria | Resend | Brevo (formerly Sendinblue) | Amazon SES |
 | :--- | :--- | :--- | :--- |
 | **SMTP Relay Host** | `smtp.resend.com` | `smtp-relay.brevo.com` | `email-smtp.<region>.amazonaws.com` |
-| **Supported Ports** | Port `465` (SSL) & `587` (TLS) | Port `587` (STARTTLS) | Ports `465`, `587`, `25`, `2465` |
+| **Supported Ports** | Ports `2465` (SSL — Render Free workaround), `465` (SSL), `587` (TLS) | Port `587` (STARTTLS) | Ports `465`, `587`, `25`, `2465` |
 | **Free Tier Allowance** | 3,000 emails/mo (100 emails/day cap) | 300 emails/day ($0/mo) | 200 emails/day (Sandbox mode only) |
 | **Paid Pricing Baseline** | Pro: $20/mo (50,000 emails) | Starter: $9/mo (5,000 emails) | Pay-as-you-go: **$0.10 per 1,000 emails** |
 | **Sandbox Restrictions** | Instant live sending upon domain verification | Instant live sending upon domain verification | **Manual production request required** (1-2 day lead time) |
@@ -245,7 +245,7 @@ export interface IStorageService {
   1. The backend implementation (`backend/src/services/emailService.ts`) uses `nodemailer` with standard SMTP authentication.
   2. All three evaluated providers (Resend, Brevo, Amazon SES) provide high-performance, TLS-authenticated SMTP endpoints (`smtp.resend.com`, `smtp-relay.brevo.com`, `email-smtp.<region>.amazonaws.com`).
   3. Staying on SMTP requires **zero code changes, zero new SDK dependencies**, and prevents vendor lock-in.
-  4. Port selection: In production, configure `SMTP_PORT=587` with `SMTP_SECURE=false` (STARTTLS) or `SMTP_PORT=465` with `SMTP_SECURE=true` (Direct SSL) to comply with cloud provider port 25 blocking policies.
+  4. Port selection: In production, configure `SMTP_PORT=2465` or `SMTP_PORT=465` with `SMTP_SECURE=true` (Direct SSL), or `SMTP_PORT=587` with `SMTP_SECURE=false` (STARTTLS). Port `2465` specifically bypasses Render Free tier outbound port blocks on 25, 465, and 587.
 
 ---
 
@@ -258,8 +258,8 @@ export interface IStorageService {
      - **2. Private Networking / VPC Peering:** On dedicated infrastructure tiers that support it (e.g., AWS ECS to Atlas via AWS PrivateLink or VPC Peering), route database traffic through private endpoints without traversing the public internet.
      - **3. Broad Network Fallback (`0.0.0.0/0` — Temporary / Last-Resort Only):** If a dynamic-egress starter plan is selected and no static egress IP or private network option exists, opening Atlas network access to `0.0.0.0/0` is a last-resort trade-off. **This is NOT considered standard or secure** and exposes the cluster endpoint to public network scanning; it requires mitigating controls including strong 64+ character generated SCRAM-SHA-256 database passwords, mandatory TLS 1.3 encryption, and strictly scoped database user privileges.
 2. **Outbound SMTP Port Policies (`VERIFIED-OFFICIAL`):**
-   - Cloud platforms universally block outbound traffic on standard SMTP port `25` to prevent spam abuse.
-   - Production SMTP configurations must specify `SMTP_PORT=587` (with `SMTP_SECURE=false` / STARTTLS) or `SMTP_PORT=465` (with `SMTP_SECURE=true` / Direct SSL), which are supported across Render (paid), Railway (Pro), DigitalOcean, and standard VPS instances.
+   - Cloud platforms universally block outbound traffic on standard SMTP port `25` to prevent spam abuse. In addition, Render Free web services block outbound ports `25`, `465`, and `587`.
+   - Production SMTP configurations should specify `SMTP_PORT=2465` (with `SMTP_SECURE=true` / Direct SSL) on Render Free, or `SMTP_PORT=465` / `SMTP_PORT=587` on paid hosting tiers (Render Starter/Paid, Railway Pro, DigitalOcean, VPS).
 3. **Region Colocation & Egress (`OWNER DECISION REQUIRED`):**
    - Co-locating backend compute, MongoDB database cluster, and Object Storage bucket within the same geographic cloud region (e.g., `us-east-1` N. Virginia or `eu-west-1` Ireland) generally reduces network round-trip latency and may minimize inter-region data transfer fees.
    - *Note:* Actual latency numbers, transfer costs, and routing paths depend on provider network architecture, data transfer volumes, and active pricing schedules — verify during provisioning.

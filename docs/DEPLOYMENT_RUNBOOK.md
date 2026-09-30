@@ -129,8 +129,8 @@ Configure SPA routing in your hosting provider dashboard or host configuration f
 The application uses standard SMTP parameters connected to Resend:
 
 - **SMTP Host:** `smtp.resend.com`
-- **SMTP Port:** `465` (SSL/TLS) or `587` (STARTTLS)
-- **SMTP Secure:** `true` (for port 465)
+- **SMTP Port:** `2465` (SSL/TLS — Resend alternative avoiding Render Free port blocks on 25/465/587) or `465` / `587`
+- **SMTP Secure:** `true` (for port 2465 or 465)
 - **SMTP User:** `resend`
 - **SMTP Password:** `<YOUR_RESEND_API_KEY>` (e.g., `re_...`)
 - **From Address:** `onboarding@resend.dev`
@@ -138,6 +138,7 @@ The application uses standard SMTP parameters connected to Resend:
 
 > [!IMPORTANT]
 > The current verified sender is `EMAIL_FROM=onboarding@resend.dev`. Do NOT change this or attempt domain DNS verification unless a custom domain is formally acquired and verified in Resend.
+> Render Free web services block outbound ports 25, 465, and 587. Resend supports port `2465` with implicit SSL (`SMTP_SECURE=true`) as a workaround.
 
 ---
 
@@ -162,8 +163,8 @@ The application uses standard SMTP parameters connected to Resend:
 | `COLLEGE_EMAIL_DOMAINS`| **Yes** | `gndecb.ac.in` | Institutional domain allowlist |
 | `STUDENT_REQUIRES_ADMIN_APPROVAL` | No | `false` | Student auto-approval after OTP |
 | `SMTP_HOST` | **Yes** | `smtp.resend.com` | Resend SMTP server |
-| `SMTP_PORT` | **Yes** | `465` | SSL SMTP port |
-| `SMTP_SECURE` | **Yes** | `true` | Enable TLS/SSL |
+| `SMTP_PORT` | **Yes** | `2465` | SSL SMTP port (Render Free port block workaround; or `465`) |
+| `SMTP_SECURE` | **Yes** | `true` | Enable TLS/SSL (required for port 2465 and 465) |
 | `SMTP_USER` | **Yes** | `resend` | Resend username |
 | `SMTP_PASSWORD` | **Yes** | `<YOUR_RESEND_API_KEY>` | Resend API key |
 | `EMAIL_FROM` | **Yes** | `onboarding@resend.dev` | Verified email sender |
