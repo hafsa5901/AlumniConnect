@@ -50,7 +50,8 @@ All configuration parameters in AlumniConnect belong to exactly one of three sec
 | `ADMIN_PASSWORD` | **SECRET** | No (Seed only) | `""` | Strong password (min 12 chars). | Initial password for bootstrap admin user. Must be removed from environment after initial seed (`backend/src/seedAdmin.ts:31`). |
 | `ALLOW_PROD_SEED` | DEPLOY-TIME | No (Seed only) | `false` | Boolean string: `true` or `false`. | Safety interlock required to run `npm run seed:admin` when `NODE_ENV=production` (`backend/src/seedAdmin.ts:25`). |
 | `REQUIRE_PROD_EMAIL` / `SMTP_REQUIRED` | DEPLOY-TIME | No | `false` | Boolean string: `true` or `false`. | When set to `true` in production, forces application startup validation to fail fast if SMTP credentials are missing (`backend/src/config/env.ts:39-45`). |
-| `AUTH_RATE_LIMIT_DISABLED` | DEPLOY-TIME | No | `false` | Boolean string: `true` or `false`. | **Test environment override only.** Must NEVER be set in production (`backend/src/config/env.ts:81`). |
+| `OTP_HASH_SECRET` | **SECRET** | No (Defaults to JWT secret) | `""` | High-entropy string (min 32 chars recommended). | Secret key used for HMAC-SHA256 hashing of 6-digit registration OTPs (`backend/src/config/env.ts:81`). |
+| `AUTH_RATE_LIMIT_DISABLED` | DEPLOY-TIME | No | `false` | Boolean string: `true` or `false`. | **Test environment override only.** Must NEVER be set in production (`backend/src/config/env.ts:82`). |
 
 ---
 
