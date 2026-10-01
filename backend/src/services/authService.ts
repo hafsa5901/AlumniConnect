@@ -129,13 +129,11 @@ export async function registerUser(input: RegisterInput): Promise<{
     verificationTokenExpires,
   });
 
-  // Send OTP email (async, don't block registration on email failure)
-  sendOtpVerificationEmail(normalizedEmail, name, rawOtp).catch((err) =>
-    console.error('[REGISTER] Failed to send OTP email:', err?.message || err)
-  );
+  // Await OTP email delivery so failure propagates to controller error handler
+  await sendOtpVerificationEmail(normalizedEmail, name, rawOtp);
 
   // Also send legacy link email if required
-  sendVerificationEmail(normalizedEmail, name, rawVerificationToken).catch(() => {});
+  await sendVerificationEmail(normalizedEmail, name, rawVerificationToken).catch(() => {});
 
   return {
     user: safeUser(user),
@@ -283,9 +281,7 @@ export async function resendOtp(email: string): Promise<void> {
     }
   );
 
-  sendOtpVerificationEmail(user.email, user.name, rawOtp).catch((err) =>
-    console.error('[RESEND_OTP] Failed to send email:', err?.message || err)
-  );
+  await sendOtpVerificationEmail(user.email, user.name, rawOtp);
 }
 
 // ── Verify email (Legacy link-based) ──────────────────────────────────────────
@@ -336,9 +332,7 @@ export async function resendVerificationEmail(email: string): Promise<void> {
   user.verificationTokenExpires = expires;
   await user.save();
 
-  sendVerificationEmail(user.email, user.name, raw).catch((err) =>
-    console.error('[RESEND_VERIFICATION] Failed to send email:', err?.message || err)
-  );
+  await sendVerificationEmail(user.email, user.name, raw);
 }
 
 // ── Login ─────────────────────────────────────────────────────────────────────

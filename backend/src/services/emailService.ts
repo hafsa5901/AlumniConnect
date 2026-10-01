@@ -213,8 +213,15 @@ async function send(options: nodemailer.SendMailOptions): Promise<void> {
       if (url) console.log('[DEV EMAIL] Test Preview URL:', url);
     }
   } catch (err: any) {
-    // Log safe error without passwords or credentials
-    console.error(`[EMAIL] Failed to deliver email to ${options.to}:`, err?.message || err);
+    // Log safe diagnostic details without exposing secrets (passwords, tokens, OTPs, or API keys)
+    const safeDiag = {
+      message: err?.message || String(err),
+      code: err?.code,
+      responseCode: err?.responseCode,
+      command: err?.command,
+      subject: options.subject,
+    };
+    console.error(`[EMAIL] Failed to deliver email to ${options.to}:`, JSON.stringify(safeDiag));
     if (env.NODE_ENV === 'production') throw err;
   }
 }
