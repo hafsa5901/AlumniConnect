@@ -39,6 +39,22 @@ beforeEach(async () => {
 describe('Phase 7A — Production-Ready Email Verification & Transport Tests', () => {
   // ── 1. Transport Selection Unit Tests (Mocked, No Real Connection) ──────────
   describe('Nodemailer Transport Selection & Configuration', () => {
+    it('selects Gmail API OAuth2 transport when GMAIL_OAUTH credentials are provided', async () => {
+      const resolved = resolveTransportConfig({
+        NODE_ENV: 'production',
+        GMAIL_OAUTH_CLIENT_ID: 'mock-client-id.apps.googleusercontent.com',
+        GMAIL_OAUTH_CLIENT_SECRET: 'mock-client-secret',
+        GMAIL_OAUTH_REFRESH_TOKEN: 'mock-refresh-token',
+      });
+
+      expect(resolved.type).toBe('gmail_oauth');
+      expect(resolved.options).toEqual({
+        clientId: 'mock-client-id.apps.googleusercontent.com',
+        clientSecret: 'mock-client-secret',
+        refreshToken: 'mock-refresh-token',
+      });
+    });
+
     it('selects direct custom SMTP configuration when SMTP_HOST and credentials are provided', async () => {
       const mockCreateTransport = jest.spyOn(nodemailer, 'createTransport').mockReturnValue({
         sendMail: jest.fn().mockResolvedValue({ messageId: 'mock-smtp-msg' }),

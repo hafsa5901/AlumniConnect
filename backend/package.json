@@ -10,7 +10,8 @@
     "seed": "tsx src/seed.ts",
     "seed:admin": "tsx src/seedAdmin.ts",
     "test": "jest --runInBand --forceExit",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "get-gmail-token": "tsx scripts/get-gmail-refresh-token.ts"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -28,6 +29,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
+    "googleapis": "^183.0.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",

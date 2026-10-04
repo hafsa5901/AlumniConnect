@@ -38,10 +38,15 @@ export function validateStartupConfig(): { valid: boolean; errors: string[] } {
   }
 
   if (process.env.NODE_ENV === 'production' || process.env.REQUIRE_PROD_EMAIL === 'true' || process.env.SMTP_REQUIRED === 'true') {
+    const hasGmailOAuth = Boolean(
+      (process.env.GMAIL_OAUTH_CLIENT_ID || process.env.GMAIL_CLIENT_ID) &&
+      (process.env.GMAIL_OAUTH_CLIENT_SECRET || process.env.GMAIL_CLIENT_SECRET) &&
+      (process.env.GMAIL_OAUTH_REFRESH_TOKEN || process.env.GMAIL_REFRESH_TOKEN)
+    );
     const hasSmtp = Boolean(process.env.SMTP_HOST && (process.env.SMTP_USER || process.env.EMAIL_USER) && (process.env.SMTP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD));
     const hasService = Boolean(process.env.EMAIL_SERVICE && (process.env.SMTP_USER || process.env.EMAIL_USER) && (process.env.SMTP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD));
-    if (!hasSmtp && !hasService) {
-      errors.push('SMTP configuration (SMTP_HOST, SMTP_USER, SMTP_PASSWORD) or EMAIL_SERVICE credentials are required when REQUIRE_PROD_EMAIL=true or in production.');
+    if (!hasGmailOAuth && !hasSmtp && !hasService) {
+      errors.push('Production email transport error: Gmail API OAuth credentials (GMAIL_OAUTH_CLIENT_ID, GMAIL_OAUTH_CLIENT_SECRET, GMAIL_OAUTH_REFRESH_TOKEN) or SMTP configuration are required when REQUIRE_PROD_EMAIL=true or in production.');
     }
   }
 
@@ -75,6 +80,9 @@ export const env = {
   EMAIL_SERVICE: process.env.EMAIL_SERVICE || '',
   EMAIL_USER: process.env.SMTP_USER || process.env.EMAIL_USER || '',
   EMAIL_PASSWORD: process.env.SMTP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD || '',
+  GMAIL_OAUTH_CLIENT_ID: process.env.GMAIL_OAUTH_CLIENT_ID || process.env.GMAIL_CLIENT_ID || '',
+  GMAIL_OAUTH_CLIENT_SECRET: process.env.GMAIL_OAUTH_CLIENT_SECRET || process.env.GMAIL_CLIENT_SECRET || '',
+  GMAIL_OAUTH_REFRESH_TOKEN: process.env.GMAIL_OAUTH_REFRESH_TOKEN || process.env.GMAIL_REFRESH_TOKEN || '',
   EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@alumniconnect.local',
   FILE_STORAGE_DRIVER: (process.env.FILE_STORAGE_DRIVER || 'local') as 'local' | 's3',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || '',
