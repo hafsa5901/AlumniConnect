@@ -12,6 +12,7 @@ import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
 import { EventFormModal } from './EventFormModal';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Calendar,
   Clock,
@@ -329,7 +330,7 @@ export default function EventsPage() {
                     <div className="flex items-center gap-2.5 pt-1">
                       <Avatar
                         name={evt.organizer?.name || 'Organizer'}
-                        src={evt.organizer?.profilePhotoUrl}
+                        src={resolveMediaUrl(evt.organizer?.profilePhotoUrl) || undefined}
                         size="sm"
                       />
                       <div className="min-w-0 flex-1">

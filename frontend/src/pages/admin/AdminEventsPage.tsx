@@ -10,6 +10,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Textarea } from '../../components/ui/Textarea';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Calendar,
   Clock,
@@ -150,7 +151,7 @@ export default function AdminEventsPage() {
                       <div className="flex items-center gap-2.5">
                         <Avatar
                           name={evt.organizer?.name || 'Organizer'}
-                          src={evt.organizer?.profilePhotoUrl}
+                          src={resolveMediaUrl(evt.organizer?.profilePhotoUrl) || undefined}
                           size="sm"
                         />
                         <div className="min-w-0 flex-1">

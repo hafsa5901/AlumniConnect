@@ -10,6 +10,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { ErrorState } from '../../components/feedback/ErrorState';
 import { Skeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Calendar,
   Clock,
@@ -297,7 +298,7 @@ export default function EventDetailPage() {
             <div className="flex items-center gap-3.5">
               <Avatar
                 name={event.organizer?.name || 'Organizer'}
-                src={event.organizer?.profilePhotoUrl}
+                src={resolveMediaUrl(event.organizer?.profilePhotoUrl) || undefined}
                 size="md"
               />
               <div>
@@ -362,7 +363,7 @@ export default function EventDetailPage() {
                   >
                     <Avatar
                       name={att.user?.name || 'User'}
-                      src={att.user?.profilePhotoUrl}
+                      src={resolveMediaUrl(att.user?.profilePhotoUrl) || undefined}
                       size="sm"
                     />
                     <div className="min-w-0 flex-1">

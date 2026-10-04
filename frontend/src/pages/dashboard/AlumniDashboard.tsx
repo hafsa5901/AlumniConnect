@@ -9,6 +9,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Sparkles,
   Users,
@@ -108,7 +109,7 @@ export default function AlumniDashboard() {
             <Card className="p-6 border-slate-200 shadow-xs space-y-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar name={user?.name || 'User'} src={user?.profilePhotoUrl} size="lg" />
+                  <Avatar name={user?.name || 'User'} src={resolveMediaUrl(user?.profilePhotoUrl) || undefined} size="lg" />
                   <div>
                     <h3 className="text-base font-bold text-navy-900">{user?.name}</h3>
                     <div className="text-xs text-slate-600 font-medium">

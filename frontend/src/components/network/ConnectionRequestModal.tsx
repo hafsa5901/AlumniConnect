@@ -4,6 +4,7 @@ import { Button } from '../ui/Button';
 import { Textarea } from '../ui/Textarea';
 import { connectionsService } from '../../services/connectionsService';
 import { Send, UserPlus, AlertCircle, Building2, CheckCircle2 } from 'lucide-react';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
 
 interface ConnectionRequestModalProps {
@@ -73,7 +74,7 @@ export const ConnectionRequestModal: React.FC<ConnectionRequestModalProps> = ({
           <div className="w-11 h-11 rounded-xl bg-navy-100 text-navy-800 flex items-center justify-center shrink-0 font-bold text-sm">
             {targetUser.profilePhotoUrl ? (
               <img
-                src={targetUser.profilePhotoUrl}
+                src={resolveMediaUrl(targetUser.profilePhotoUrl) || undefined}
                 alt={targetUser.name}
                 className="w-full h-full object-cover rounded-xl"
               />

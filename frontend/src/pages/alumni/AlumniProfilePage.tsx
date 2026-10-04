@@ -9,6 +9,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { ErrorState } from '../../components/feedback/ErrorState';
 import { Skeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Building2,
   MapPin,
@@ -101,7 +102,7 @@ export default function AlumniProfilePage() {
         <Card className="p-8 border-slate-200 shadow-card space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
-              <Avatar name={alumni.name} src={alumni.profilePhotoUrl} size="xl" />
+              <Avatar name={alumni.name} src={resolveMediaUrl(alumni.profilePhotoUrl) || undefined} size="xl" />
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-extrabold text-navy-900 tracking-tight">

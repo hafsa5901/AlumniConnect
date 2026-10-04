@@ -9,6 +9,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
 import { UserManagementModal } from './UserManagementModal';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Users,
   Search,
@@ -226,7 +227,7 @@ export default function AdminUsersPage() {
                     <tr key={u.id || u._id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <Avatar src={u.profilePhotoUrl} name={u.name} size="sm" />
+                          <Avatar src={resolveMediaUrl(u.profilePhotoUrl) || undefined} name={u.name} size="sm" />
                           <div>
                             <div className="font-bold text-slate-900 text-sm">{u.name}</div>
                             <div className="text-slate-500">{u.email}</div>

@@ -9,6 +9,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Sparkles,
   Users,
@@ -127,7 +128,7 @@ export default function StudentDashboard() {
                   <Card key={alumni._id || alumni.id} hoverable className="p-5 flex flex-col justify-between space-y-4">
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
-                        <Avatar name={alumni.name} src={alumni.profilePhotoUrl} size="md" />
+                        <Avatar name={alumni.name} src={resolveMediaUrl(alumni.profilePhotoUrl) || undefined} size="md" />
                         <VerifiedBadge role="alumni" verificationStatus="admin_approved" size="sm" />
                       </div>
 

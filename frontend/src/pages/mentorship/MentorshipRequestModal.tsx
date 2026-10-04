@@ -6,6 +6,7 @@ import { Textarea } from '../../components/ui/Textarea';
 import { Avatar } from '../../components/ui/Avatar';
 import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { mentorshipService, MentorUser } from '../../services/mentorship';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { Calendar, MessageSquare, Lightbulb, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -92,7 +93,7 @@ export const MentorshipRequestModal: React.FC<MentorshipRequestModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Selected Mentor Card */}
         <div className="flex items-center gap-3.5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl">
-          <Avatar src={mentor.profilePhotoUrl} name={mentor.name} size="md" />
+          <Avatar src={resolveMediaUrl(mentor.profilePhotoUrl) || undefined} name={mentor.name} size="md" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 font-bold text-slate-900 text-sm">
               <span className="truncate">{mentor.name}</span>

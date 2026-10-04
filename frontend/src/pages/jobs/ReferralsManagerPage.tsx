@@ -11,6 +11,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Textarea } from '../../components/ui/Textarea';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
 import { EmptyState } from '../../components/feedback/EmptyState';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Briefcase,
   Building2,
@@ -272,7 +273,7 @@ export default function ReferralsManagerPage() {
                     {/* Left: Applicant & Job Info */}
                     <div className="flex items-start gap-3.5 min-w-0">
                       <Avatar
-                        src={req.applicant?.profilePhotoUrl}
+                        src={resolveMediaUrl(req.applicant?.profilePhotoUrl) || undefined}
                         name={req.applicant?.name || 'Applicant'}
                         size="md"
                       />
@@ -416,7 +417,7 @@ export default function ReferralsManagerPage() {
                       <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
                         <span>Referred by:</span>
                         <Avatar
-                          src={req.jobPoster?.profilePhotoUrl}
+                          src={resolveMediaUrl(req.jobPoster?.profilePhotoUrl) || undefined}
                           name={req.jobPoster?.name || 'Poster'}
                           size="sm"
                         />

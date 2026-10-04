@@ -11,6 +11,7 @@ import { Modal } from '../../components/ui/Modal';
 import { JobFormModal } from './JobFormModal';
 import { ErrorState } from '../../components/feedback/ErrorState';
 import { Skeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Briefcase,
   Building2,
@@ -419,7 +420,7 @@ export default function JobDetailPage() {
                     </h3>
                     <div className="flex items-center gap-3.5">
                       <Avatar
-                        src={job.postedBy.profilePhotoUrl}
+                        src={resolveMediaUrl(job.postedBy.profilePhotoUrl) || undefined}
                         name={job.postedBy.name}
                         size="lg"
                       />

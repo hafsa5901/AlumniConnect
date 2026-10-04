@@ -19,6 +19,7 @@ import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
 import { MentorshipRequestModal } from './MentorshipRequestModal';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Users,
   Search,
@@ -314,7 +315,7 @@ export default function MentorshipPage() {
                       {/* Avatar & Verification Header */}
                       <div className="flex items-start gap-3.5">
                         <Avatar
-                          src={mentor.profilePhotoUrl}
+                          src={resolveMediaUrl(mentor.profilePhotoUrl) || undefined}
                           name={mentor.name}
                           size="lg"
                         />
@@ -468,7 +469,7 @@ export default function MentorshipPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                       <div className="flex items-center gap-3">
                         <Avatar
-                          src={isStudent ? reqItem.mentor.profilePhotoUrl : reqItem.student.profilePhotoUrl}
+                          src={resolveMediaUrl(isStudent ? reqItem.mentor.profilePhotoUrl : reqItem.student.profilePhotoUrl) || undefined}
                           name={isStudent ? reqItem.mentor.name : reqItem.student.name}
                           size="md"
                         />
@@ -595,7 +596,7 @@ export default function MentorshipPage() {
 
                       <div className="flex items-center gap-3">
                         <Avatar
-                          src={isStudent ? conn.mentor.profilePhotoUrl : conn.student.profilePhotoUrl}
+                          src={resolveMediaUrl(isStudent ? conn.mentor.profilePhotoUrl : conn.student.profilePhotoUrl) || undefined}
                           name={isStudent ? conn.mentor.name : conn.student.name}
                           size="md"
                         />

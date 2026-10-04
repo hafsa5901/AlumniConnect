@@ -8,6 +8,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   FileText,
   Search,
@@ -202,7 +203,7 @@ export default function AdminAuditLogsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2.5">
                           <Avatar
-                            src={log.admin?.profilePhotoUrl}
+                            src={resolveMediaUrl(log.admin?.profilePhotoUrl) || undefined}
                             name={log.admin?.name || 'Admin'}
                             size="sm"
                           />

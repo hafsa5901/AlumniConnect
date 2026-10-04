@@ -11,6 +11,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Search,
   Building2,
@@ -215,7 +216,7 @@ export default function AlumniDirectoryPage() {
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
-                    <Avatar name={member.name} src={member.profilePhotoUrl} size="md" />
+                    <Avatar name={member.name} src={resolveMediaUrl(member.profilePhotoUrl) || undefined} size="md" />
                     <VerifiedBadge role="alumni" verificationStatus="admin_approved" size="sm" />
                   </div>
 

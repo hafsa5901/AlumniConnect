@@ -10,6 +10,7 @@ import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { Modal } from '../../components/ui/Modal';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   messagingService,
   ConversationItem,
@@ -431,7 +432,7 @@ export default function MessagesPage() {
                       }`}
                     >
                       <Avatar
-                        src={partner.profilePhotoUrl}
+                        src={resolveMediaUrl(partner.profilePhotoUrl) || undefined}
                         name={partner.name || 'User'}
                         size="md"
                       />
@@ -502,7 +503,7 @@ export default function MessagesPage() {
                     </button>
 
                     <Avatar
-                      src={activeConversation.otherParticipant?.profilePhotoUrl}
+                      src={resolveMediaUrl(activeConversation.otherParticipant?.profilePhotoUrl) || undefined}
                       name={activeConversation.otherParticipant?.name || 'User'}
                       size="md"
                     />
@@ -710,7 +711,7 @@ export default function MessagesPage() {
                   className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Avatar src={contact.profilePhotoUrl} name={contact.name} size="md" />
+                    <Avatar src={resolveMediaUrl(contact.profilePhotoUrl) || undefined} name={contact.name} size="md" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs truncate">
                         <span>{contact.name}</span>

@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Avatar } from '../../components/ui/Avatar';
 import { Lock, Upload, Plus, Trash2, ArrowLeft, Check, Sparkles } from 'lucide-react';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
 
 export default function ProfileEditPage() {
@@ -187,7 +188,7 @@ export default function ProfileEditPage() {
                 Profile Photo
               </h3>
               <div className="flex items-center gap-6">
-                <Avatar name={user?.name || ''} src={photoUrl} size="xl" />
+                <Avatar name={user?.name || ''} src={resolveMediaUrl(photoUrl) || undefined} size="xl" />
                 <div className="space-y-2">
                   <label className="btn btn-outline btn-sm cursor-pointer inline-flex items-center gap-2">
                     <Upload className="w-4 h-4" />

@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Edit3,
   Building2,
@@ -97,7 +98,7 @@ export default function ProfileViewPage() {
           <Card className="p-6 border-slate-200 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <Avatar name={currentUser?.name || ''} src={currentUser?.profilePhotoUrl} size="lg" />
+                <Avatar name={currentUser?.name || ''} src={resolveMediaUrl(currentUser?.profilePhotoUrl) || undefined} size="lg" />
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl font-bold text-navy-900">{currentUser?.name}</h2>

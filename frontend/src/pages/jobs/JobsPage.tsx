@@ -12,6 +12,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
 import { JobFormModal } from './JobFormModal';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   Briefcase,
   Building2,
@@ -373,7 +374,7 @@ export default function JobsPage() {
                 <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <Avatar
-                      src={job.postedBy?.profilePhotoUrl}
+                      src={resolveMediaUrl(job.postedBy?.profilePhotoUrl) || undefined}
                       name={job.postedBy?.name || 'Poster'}
                       size="sm"
                     />

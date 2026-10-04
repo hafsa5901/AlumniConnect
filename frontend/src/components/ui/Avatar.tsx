@@ -1,4 +1,5 @@
 import React from 'react';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 export interface AvatarProps {
   src?: string;
@@ -33,10 +34,12 @@ export const Avatar: React.FC<AvatarProps> = ({
     xl: 'w-16 h-16 text-xl',
   }[size];
 
-  if (src && !imgError) {
+  const resolvedSrc = resolveMediaUrl(src);
+
+  if (resolvedSrc && !imgError) {
     return (
       <img
-        src={src}
+        src={resolvedSrc}
         alt={name}
         onError={() => setImgError(true)}
         className={`${sizeClasses} rounded-full object-cover border border-slate-200 ${className}`}

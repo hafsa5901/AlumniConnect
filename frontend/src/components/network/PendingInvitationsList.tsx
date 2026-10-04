@@ -12,6 +12,7 @@ import {
   Inbox,
   Send,
 } from 'lucide-react';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 interface PendingInvitationsListProps {
   received: ConnectionRequestItem[];
@@ -89,7 +90,7 @@ export const PendingInvitationsList: React.FC<PendingInvitationsListProps> = ({
                       <div className="relative shrink-0">
                         {sender.profilePhotoUrl ? (
                           <img
-                            src={sender.profilePhotoUrl}
+                            src={resolveMediaUrl(sender.profilePhotoUrl) || undefined}
                             alt={sender.name}
                             className="w-12 h-12 rounded-xl object-cover border border-slate-100 shadow-sm"
                           />
@@ -220,7 +221,7 @@ export const PendingInvitationsList: React.FC<PendingInvitationsListProps> = ({
                       <div className="relative shrink-0">
                         {recipient.profilePhotoUrl ? (
                           <img
-                            src={recipient.profilePhotoUrl}
+                            src={resolveMediaUrl(recipient.profilePhotoUrl) || undefined}
                             alt={recipient.name}
                             className="w-12 h-12 rounded-xl object-cover border border-slate-100 shadow-sm"
                           />

@@ -3,6 +3,7 @@ import { ConnectionItem } from '../../types/connection';
 import { Button } from '../ui/Button';
 import { MessageSquare, UserMinus, Building2, GraduationCap, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { Modal } from '../ui/Modal';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 interface ConnectionCardProps {
   connection: ConnectionItem;
@@ -47,7 +48,7 @@ export const ConnectionCard: React.FC<ConnectionCardProps> = ({
             <div className="relative shrink-0">
               {connectedUser.profilePhotoUrl ? (
                 <img
-                  src={connectedUser.profilePhotoUrl}
+                  src={resolveMediaUrl(connectedUser.profilePhotoUrl) || undefined}
                   alt={connectedUser.name}
                   className="w-13 h-13 rounded-xl object-cover border border-slate-100 shadow-sm"
                 />

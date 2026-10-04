@@ -7,6 +7,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { adminService, AdminUserItem } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   ShieldAlert,
   UserCheck,
@@ -174,7 +175,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
       <div className="space-y-6">
         {/* User Quick Header */}
         <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
-          <Avatar src={targetUser.profilePhotoUrl} name={targetUser.name} size="lg" />
+          <Avatar src={resolveMediaUrl(targetUser.profilePhotoUrl) || undefined} name={targetUser.name} size="lg" />
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-bold text-slate-900 text-lg">{targetUser.name}</h3>

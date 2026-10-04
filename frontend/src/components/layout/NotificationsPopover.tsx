@@ -21,6 +21,7 @@ import {
 } from '../../services/notification';
 import { Avatar } from '../ui/Avatar';
 import { EmptyState } from '../feedback/EmptyState';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
 
 function formatRelativeTime(dateString: string): string {
@@ -352,7 +353,7 @@ export const NotificationsPopover: React.FC = () => {
                     <div className="relative flex-shrink-0 mt-0.5">
                       {notif.actor?.profilePhotoUrl ? (
                         <Avatar
-                          src={notif.actor.profilePhotoUrl}
+                          src={resolveMediaUrl(notif.actor.profilePhotoUrl) || undefined}
                           name={notif.actor.name}
                           size="sm"
                         />
