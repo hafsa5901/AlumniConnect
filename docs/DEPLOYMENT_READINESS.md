@@ -53,7 +53,7 @@ The items below are **NOT configured** in this repository and must be provisione
 - **Automated Backups:** Daily automated snapshots with 30-day retention and continuous Point-in-Time Recovery (PITR).
 
 ### 2. Production SMTP / Transactional Email Service
-- **Provider:** Dedicated transactional provider (SendGrid, Mailgun, Amazon SES, Postmark).
+- **Provider:** Resend SMTP (`smtp.resend.com` on port `2465` with `SMTP_SECURE=true`). Sender domain `alumniconnect.store` (confirmed verified by owner; delivery unverified).
 - **Domain Verification:** Configure SPF (`v=spf1 ...`), DKIM (`k=rsa; ...`), and DMARC (`v=DMARC1; p=reject; ...`) records on the sending domain to prevent verification emails from landing in spam.
 
 ### 3. Production Object Storage

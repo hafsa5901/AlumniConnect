@@ -415,7 +415,7 @@ The following architectural, operational, and financial decisions remain for the
 | **Backend Provider** | `OWNER DECISION REQUIRED` | Render Starter ($7/mo, managed) vs Railway Pro ($20/mo) vs DigitalOcean App Platform ($5-$12/mo) vs Self-Managed VPS ($4-$12/mo). |
 | **Database Tier** | `OWNER DECISION REQUIRED` | MongoDB Atlas Flex (Serverless, pay-per-operation, daily snapshots) vs Atlas M10 Dedicated (~$57/mo, dedicated RAM, 1,500 conns, continuous PITR) vs Self-hosted on VPS. |
 | **Object Storage Provider** | `OWNER DECISION REQUIRED` | Cloudflare R2 (S3-compatible, zero egress fees, 10 GB free) vs Amazon S3 Standard ($0.023/GB-mo + request/egress costs). |
-| **Transactional Email Provider** | `OWNER DECISION REQUIRED` | Resend (3,000 free/mo, $20/mo Pro) vs Brevo ($9/mo Starter) vs AWS SES ($0.10/1k emails, requires sandbox approval). |
+| **Transactional Email Provider** | `RESOLVED (OWNER-STATED)` | Resend SMTP on port 2465 (`smtp.resend.com`). Verified domain: `alumniconnect.store` (confirmed by owner; delivery not yet verified). The `onboarding@resend.dev` sandbox is retired. |
 | **DNS & Apex Domain** | `OWNER DECISION REQUIRED` | Institutional apex domain registration (e.g. `alumniconnect.edu`) and registrar/DNS management (Cloudflare at-cost vs conventional registrar). |
 | **Primary Cloud Region** | `OWNER DECISION REQUIRED` | Geographic location for compute, database, and storage colocation (`us-east-1`, `eu-west-1`, `ap-south-1`, etc.) balancing latency and compliance. |
 | **Recovery Point Objective (RPO)**| `OWNER DECISION REQUIRED` | Target maximum acceptable data loss window in the event of disaster (e.g. RPO <= 1 hr requires continuous oplog/PITR; RPO <= 24 hrs allows daily snapshots). |

@@ -133,12 +133,12 @@ The application uses standard SMTP parameters connected to Resend:
 - **SMTP Secure:** `true` (for port 2465 or 465)
 - **SMTP User:** `resend`
 - **SMTP Password:** `<YOUR_RESEND_API_KEY>` (e.g., `re_...`)
-- **From Address:** `onboarding@resend.dev`
+- **From Address:** `"AlumniConnect <noreply@alumniconnect.store>"`
 - **Requirement Guard:** `REQUIRE_PROD_EMAIL=true` (forces startup validation in production mode)
 
 > [!IMPORTANT]
-> The current verified sender is `EMAIL_FROM=onboarding@resend.dev`. Do NOT change this or attempt domain DNS verification unless a custom domain is formally acquired and verified in Resend.
-> Render Free web services block outbound ports 25, 465, and 587. Resend supports port `2465` with implicit SSL (`SMTP_SECURE=true`) as a workaround.
+> The verified sender is `EMAIL_FROM="AlumniConnect <noreply@alumniconnect.store>"`. Domain verification for `alumniconnect.store` was confirmed by the project owner in Resend (not verified by this repository); live email delivery has not yet been verified. The `onboarding@resend.dev` sandbox is retired.
+> Render Free web services block outbound network traffic on ports 25, 465, and 587. Resend provides port `2465` with implicit SSL/TLS (`SMTP_SECURE=true`) as a verified workaround.
 
 ---
 
@@ -167,7 +167,7 @@ The application uses standard SMTP parameters connected to Resend:
 | `SMTP_SECURE` | **Yes** | `true` | Enable TLS/SSL (required for port 2465 and 465) |
 | `SMTP_USER` | **Yes** | `resend` | Resend username |
 | `SMTP_PASSWORD` | **Yes** | `<YOUR_RESEND_API_KEY>` | Resend API key |
-| `EMAIL_FROM` | **Yes** | `onboarding@resend.dev` | Verified email sender |
+| `EMAIL_FROM` | **Yes** | `"AlumniConnect <noreply@alumniconnect.store>"` | Verified email sender |
 | `REQUIRE_PROD_EMAIL` | **Yes** | `true` | Hard failure if SMTP is unconfigured |
 | `FILE_STORAGE_DRIVER` | No | `local` | Storage driver (`local` or `s3`) |
 | `ADMIN_EMAIL` | No | `<YOUR_INITIAL_ADMIN_EMAIL>` | Initial admin bootstrap email (seed) |
@@ -229,7 +229,7 @@ As implemented in `backend/src/services/storage/LocalStorageService.ts:11-13`:
 ```
 1. Setup MongoDB Atlas Cluster & Database User
    ↓
-2. Setup Resend API Key (onboarding@resend.dev)
+2. Setup Resend API Key (alumniconnect.store)
    ↓
 3. Deploy Backend API to Render (Obtain https://*.onrender.com URL)
    ↓

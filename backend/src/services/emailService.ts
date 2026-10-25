@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import { google } from 'googleapis';
 import { env } from '../config/env';
 
 let transporter: nodemailer.Transporter | null = null;
@@ -16,81 +15,11 @@ export interface TransportConfig {
 }
 
 /**
- * Builds an RFC 2822 compliant MIME message string.
- */
-export function buildRfc2822Message(options: {
-  from: string;
-  to: string;
-  subject: string;
-  text?: string;
-  html?: string;
-}): string {
-  const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-  const lines: string[] = [
-    `From: ${options.from}`,
-    `To: ${options.to}`,
-    `Subject: =?UTF-8?B?${Buffer.from(options.subject, 'utf-8').toString('base64')}?=`,
-    'MIME-Version: 1.0',
-  ];
-
-  if (options.text && options.html) {
-    lines.push(
-      `Content-Type: multipart/alternative; boundary="${boundary}"`,
-      '',
-      `--${boundary}`,
-      'Content-Type: text/plain; charset="UTF-8"',
-      'Content-Transfer-Encoding: 8bit',
-      '',
-      options.text,
-      '',
-      `--${boundary}`,
-      'Content-Type: text/html; charset="UTF-8"',
-      'Content-Transfer-Encoding: 8bit',
-      '',
-      options.html,
-      '',
-      `--${boundary}--`
-    );
-  } else if (options.html) {
-    lines.push(
-      'Content-Type: text/html; charset="UTF-8"',
-      'Content-Transfer-Encoding: 8bit',
-      '',
-      options.html
-    );
-  } else {
-    lines.push(
-      'Content-Type: text/plain; charset="UTF-8"',
-      'Content-Transfer-Encoding: 8bit',
-      '',
-      options.text || ''
-    );
-  }
-
-  return lines.join('\r\n');
-}
-
-/**
- * Base64url encodes a string or Buffer (URL-safe base64 without padding).
- */
-export function encodeBase64Url(input: string | Buffer): string {
-  const buf = typeof input === 'string' ? Buffer.from(input, 'utf-8') : input;
-  return buf
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-}
-
-/**
  * Resolves the transport configuration options from environment settings.
  * Pure function allowing unit test assertions without opening sockets.
  */
 export function resolveTransportConfig(configOverrides?: {
   NODE_ENV?: string;
-  GMAIL_OAUTH_CLIENT_ID?: string;
-  GMAIL_OAUTH_CLIENT_SECRET?: string;
-  GMAIL_OAUTH_REFRESH_TOKEN?: string;
   SMTP_HOST?: string;
   SMTP_PORT?: number;
   SMTP_SECURE?: boolean;
@@ -99,12 +28,9 @@ export function resolveTransportConfig(configOverrides?: {
   EMAIL_SERVICE?: string;
   EMAIL_USER?: string;
   EMAIL_PASSWORD?: string;
-}): { type: 'gmail_oauth' | 'smtp' | 'service' | 'ethereal' | 'console'; options?: any } {
+}): { type: 'smtp' | 'service' | 'ethereal' | 'console'; options?: any } {
   const currentEnv = {
     NODE_ENV: configOverrides?.NODE_ENV ?? env.NODE_ENV,
-    GMAIL_OAUTH_CLIENT_ID: configOverrides?.GMAIL_OAUTH_CLIENT_ID ?? env.GMAIL_OAUTH_CLIENT_ID,
-    GMAIL_OAUTH_CLIENT_SECRET: configOverrides?.GMAIL_OAUTH_CLIENT_SECRET ?? env.GMAIL_OAUTH_CLIENT_SECRET,
-    GMAIL_OAUTH_REFRESH_TOKEN: configOverrides?.GMAIL_OAUTH_REFRESH_TOKEN ?? env.GMAIL_OAUTH_REFRESH_TOKEN,
     SMTP_HOST: configOverrides?.SMTP_HOST ?? env.SMTP_HOST,
     SMTP_PORT: configOverrides?.SMTP_PORT ?? env.SMTP_PORT,
     SMTP_SECURE: configOverrides?.SMTP_SECURE ?? env.SMTP_SECURE,
@@ -118,33 +44,16 @@ export function resolveTransportConfig(configOverrides?: {
   // In test environment without explicit transport config overrides, use test transport
   if (
     currentEnv.NODE_ENV === 'test' &&
-    !configOverrides?.GMAIL_OAUTH_CLIENT_ID &&
     !configOverrides?.SMTP_HOST &&
     !configOverrides?.EMAIL_SERVICE
   ) {
     return { type: 'ethereal' };
   }
 
-  // 1. Gmail API OAuth2 transport (preferred REST API over HTTPS port 443)
-  if (
-    currentEnv.GMAIL_OAUTH_CLIENT_ID &&
-    currentEnv.GMAIL_OAUTH_CLIENT_SECRET &&
-    currentEnv.GMAIL_OAUTH_REFRESH_TOKEN
-  ) {
-    return {
-      type: 'gmail_oauth',
-      options: {
-        clientId: currentEnv.GMAIL_OAUTH_CLIENT_ID,
-        clientSecret: currentEnv.GMAIL_OAUTH_CLIENT_SECRET,
-        refreshToken: currentEnv.GMAIL_OAUTH_REFRESH_TOKEN,
-      },
-    };
-  }
-
   const smtpUser = configOverrides?.SMTP_USER ?? (configOverrides?.EMAIL_USER ?? (currentEnv.SMTP_USER || currentEnv.EMAIL_USER));
   const smtpPass = configOverrides?.SMTP_PASSWORD ?? (configOverrides?.EMAIL_PASSWORD ?? (currentEnv.SMTP_PASSWORD || currentEnv.EMAIL_PASSWORD));
 
-  // 2. Direct SMTP server configuration
+  // 1. Direct SMTP server configuration
   if (currentEnv.SMTP_HOST && smtpUser && smtpPass) {
     return {
       type: 'smtp',
@@ -160,7 +69,7 @@ export function resolveTransportConfig(configOverrides?: {
   const serviceUser = configOverrides?.EMAIL_USER ?? (configOverrides?.SMTP_USER ?? (currentEnv.EMAIL_USER || currentEnv.SMTP_USER));
   const servicePass = configOverrides?.EMAIL_PASSWORD ?? (configOverrides?.SMTP_PASSWORD ?? (currentEnv.EMAIL_PASSWORD || currentEnv.SMTP_PASSWORD));
 
-  // 3. Pre-configured email service provider
+  // 2. Pre-configured email service provider
   if (currentEnv.EMAIL_SERVICE && serviceUser && servicePass) {
     return {
       type: 'service',
@@ -171,70 +80,19 @@ export function resolveTransportConfig(configOverrides?: {
     };
   }
 
-  // 4. Production & Strict Email Guard
+  // 3. Production & Strict Email Guard
   if (
     currentEnv.NODE_ENV === 'production' ||
     process.env.REQUIRE_PROD_EMAIL === 'true' ||
     process.env.SMTP_REQUIRED === 'true'
   ) {
     throw new Error(
-      'Production email transport error: GMAIL_OAUTH credentials (GMAIL_OAUTH_CLIENT_ID, GMAIL_OAUTH_CLIENT_SECRET, GMAIL_OAUTH_REFRESH_TOKEN) or SMTP configuration must be configured when REQUIRE_PROD_EMAIL=true or in production.'
+      'Production email transport error: SMTP configuration (SMTP_HOST, SMTP_USER, SMTP_PASSWORD) or EMAIL_SERVICE must be configured when REQUIRE_PROD_EMAIL=true or in production.'
     );
   }
 
-  // 5. Dev / test mode fallback
+  // 4. Dev / test mode fallback
   return { type: 'ethereal' };
-}
-
-/**
- * Sends an email using the Gmail REST API (users.messages.send) over HTTPS.
- */
-export async function sendViaGmailApi(
-  options: { from: string; to: string; subject: string; text?: string; html?: string },
-  credentials?: { clientId: string; clientSecret: string; refreshToken: string }
-): Promise<{ messageId?: string }> {
-  const clientId = credentials?.clientId || env.GMAIL_OAUTH_CLIENT_ID;
-  const clientSecret = credentials?.clientSecret || env.GMAIL_OAUTH_CLIENT_SECRET;
-  const refreshToken = credentials?.refreshToken || env.GMAIL_OAUTH_REFRESH_TOKEN;
-
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error('Missing Gmail API OAuth credentials (GMAIL_OAUTH_CLIENT_ID, GMAIL_OAUTH_CLIENT_SECRET, GMAIL_OAUTH_REFRESH_TOKEN).');
-  }
-
-  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
-  oauth2Client.setCredentials({ refresh_token: refreshToken });
-
-  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-  const rawMessage = buildRfc2822Message(options);
-  const raw = encodeBase64Url(rawMessage);
-
-  try {
-    const res = await gmail.users.messages.send({
-      userId: 'me',
-      requestBody: { raw },
-    });
-
-    if (env.NODE_ENV === 'development') {
-      console.log(`[EMAIL] Gmail API sent message id: ${res.data.id} to ${options.to}`);
-    }
-
-    return { messageId: res.data.id || undefined };
-  } catch (err: any) {
-    const errMessage = String(err?.message || '');
-    const errData = err?.response?.data;
-    const isInvalidGrant =
-      errMessage.includes('invalid_grant') ||
-      errData?.error === 'invalid_grant' ||
-      String(errData?.error_description || '').includes('invalid_grant');
-
-    if (isInvalidGrant) {
-      console.error(
-        '[EMAIL] 🔴 GMAIL OAUTH ERROR: Gmail OAuth refresh token expired or revoked — re-run get-gmail-refresh-token.ts and update GMAIL_REFRESH_TOKEN in your environment.'
-      );
-    }
-
-    throw err;
-  }
 }
 
 /**
@@ -305,7 +163,7 @@ export function resetTransporterForTest(): void {
  */
 export async function verifyTransporterConnection(): Promise<{
   success: boolean;
-  type: 'gmail_oauth' | 'smtp' | 'service' | 'ethereal' | 'console';
+  type: 'smtp' | 'service' | 'ethereal' | 'console';
   host?: string;
   port?: number;
   secure?: boolean;
@@ -314,33 +172,7 @@ export async function verifyTransporterConnection(): Promise<{
   error?: string;
 }> {
   const resolved = resolveTransportConfig();
-  const passwordConfigured = Boolean(
-    env.GMAIL_OAUTH_REFRESH_TOKEN || env.SMTP_PASSWORD || env.EMAIL_PASSWORD
-  );
-
-  if (resolved.type === 'gmail_oauth') {
-    try {
-      const oauth2Client = new google.auth.OAuth2(
-        resolved.options.clientId,
-        resolved.options.clientSecret
-      );
-      oauth2Client.setCredentials({ refresh_token: resolved.options.refreshToken });
-      const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-      await gmail.users.getProfile({ userId: 'me' });
-      return {
-        success: true,
-        type: 'gmail_oauth',
-        passwordConfigured: true,
-      };
-    } catch (err: any) {
-      return {
-        success: false,
-        type: 'gmail_oauth',
-        passwordConfigured: true,
-        error: err?.message || String(err),
-      };
-    }
-  }
+  const passwordConfigured = Boolean(env.SMTP_PASSWORD || env.EMAIL_PASSWORD);
 
   if (resolved.type === 'smtp' || resolved.type === 'service') {
     try {
@@ -388,14 +220,6 @@ async function send(options: { to: string; subject: string; text?: string; html?
   const resolved = resolveTransportConfig();
 
   try {
-    if (resolved.type === 'gmail_oauth') {
-      await sendViaGmailApi(
-        { from: env.EMAIL_FROM, ...options },
-        resolved.options
-      );
-      return;
-    }
-
     const t = await getTransporter();
     const info = await t.sendMail({ from: env.EMAIL_FROM, ...options });
     if (env.NODE_ENV === 'development') {

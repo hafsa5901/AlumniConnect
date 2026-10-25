@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import app from '../src/app';
 import User from '../src/models/User';
+import { env } from '../src/config/env';
 import {
   resolveTransportConfig,
   createTransporter,
@@ -39,20 +40,104 @@ beforeEach(async () => {
 describe('Phase 7A — Production-Ready Email Verification & Transport Tests', () => {
   // ── 1. Transport Selection Unit Tests (Mocked, No Real Connection) ──────────
   describe('Nodemailer Transport Selection & Configuration', () => {
-    it('selects Gmail API OAuth2 transport when GMAIL_OAUTH credentials are provided', async () => {
-      const resolved = resolveTransportConfig({
-        NODE_ENV: 'production',
-        GMAIL_OAUTH_CLIENT_ID: 'mock-client-id.apps.googleusercontent.com',
-        GMAIL_OAUTH_CLIENT_SECRET: 'mock-client-secret',
-        GMAIL_OAUTH_REFRESH_TOKEN: 'mock-refresh-token',
-      });
+    it('ignores stray GMAIL_* environment variables and selects direct SMTP when SMTP config is provided', async () => {
+      process.env.GMAIL_OAUTH_CLIENT_ID = 'stray-client-id';
+      process.env.GMAIL_OAUTH_CLIENT_SECRET = 'stray-client-secret';
+      process.env.GMAIL_OAUTH_REFRESH_TOKEN = 'stray-refresh-token';
 
-      expect(resolved.type).toBe('gmail_oauth');
-      expect(resolved.options).toEqual({
-        clientId: 'mock-client-id.apps.googleusercontent.com',
-        clientSecret: 'mock-client-secret',
-        refreshToken: 'mock-refresh-token',
-      });
+      try {
+        const resolved = resolveTransportConfig({
+          NODE_ENV: 'production',
+          SMTP_HOST: 'smtp.resend.com',
+          SMTP_PORT: 2465,
+          SMTP_SECURE: true,
+          SMTP_USER: 'resend',
+          SMTP_PASSWORD: 'test-resend-api-key',
+        });
+
+        expect(resolved.type).toBe('smtp');
+        expect(resolved.options).toEqual({
+          host: 'smtp.resend.com',
+          port: 2465,
+          secure: true,
+          auth: {
+            user: 'resend',
+            pass: 'test-resend-api-key',
+          },
+        });
+      } finally {
+        delete process.env.GMAIL_OAUTH_CLIENT_ID;
+        delete process.env.GMAIL_OAUTH_CLIENT_SECRET;
+        delete process.env.GMAIL_OAUTH_REFRESH_TOKEN;
+      }
+    });
+
+    it('accepts EMAIL_FROM in "Name <address>" form and passes it correctly to sendMail', async () => {
+      const mockSendMail = jest.fn().mockResolvedValue({ messageId: 'mock-msg-id' });
+      jest.spyOn(nodemailer, 'createTransport').mockReturnValue({
+        sendMail: mockSendMail,
+      } as any);
+
+      const originalFrom = env.EMAIL_FROM;
+      const originalEnv = env.NODE_ENV;
+      const originalHost = env.SMTP_HOST;
+      const originalUser = env.SMTP_USER;
+      const originalPass = env.SMTP_PASSWORD;
+
+      (env as any).EMAIL_FROM = 'AlumniConnect <noreply@alumniconnect.store>';
+      (env as any).NODE_ENV = 'production';
+      (env as any).SMTP_HOST = 'smtp.resend.com';
+      (env as any).SMTP_USER = 'resend';
+      (env as any).SMTP_PASSWORD = 'test-password';
+
+      try {
+        resetTransporterForTest();
+        await sendVerificationEmail('test.recipient@college.edu', 'Test Student', 'token-abc');
+
+        expect(mockSendMail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            from: 'AlumniConnect <noreply@alumniconnect.store>',
+            to: 'test.recipient@college.edu',
+          })
+        );
+      } finally {
+        (env as any).EMAIL_FROM = originalFrom;
+        (env as any).NODE_ENV = originalEnv;
+        (env as any).SMTP_HOST = originalHost;
+        (env as any).SMTP_USER = originalUser;
+        (env as any).SMTP_PASSWORD = originalPass;
+        resetTransporterForTest();
+      }
+    });
+
+    it('propagates delivery errors in production without swallowing them', async () => {
+      const mockSendMail = jest.fn().mockRejectedValue(new Error('SMTP connection refused: timeout'));
+      jest.spyOn(nodemailer, 'createTransport').mockReturnValue({
+        sendMail: mockSendMail,
+      } as any);
+
+      const originalEnv = env.NODE_ENV;
+      const originalHost = env.SMTP_HOST;
+      const originalUser = env.SMTP_USER;
+      const originalPass = env.SMTP_PASSWORD;
+
+      (env as any).NODE_ENV = 'production';
+      (env as any).SMTP_HOST = 'smtp.resend.com';
+      (env as any).SMTP_USER = 'resend';
+      (env as any).SMTP_PASSWORD = 'test-password';
+
+      try {
+        resetTransporterForTest();
+        await expect(
+          sendVerificationEmail('failing.recipient@college.edu', 'Fail User', 'token-123')
+        ).rejects.toThrow('SMTP connection refused');
+      } finally {
+        (env as any).NODE_ENV = originalEnv;
+        (env as any).SMTP_HOST = originalHost;
+        (env as any).SMTP_USER = originalUser;
+        (env as any).SMTP_PASSWORD = originalPass;
+        resetTransporterForTest();
+      }
     });
 
     it('selects direct custom SMTP configuration when SMTP_HOST and credentials are provided', async () => {
@@ -198,18 +283,52 @@ describe('Phase 7A — Production-Ready Email Verification & Transport Tests', (
       }).toThrow('Production email transport error');
     });
 
-    it('falls back to dev test account in non-production environments when credentials are absent', () => {
-      const resolved = resolveTransportConfig({
-        NODE_ENV: 'development',
-        SMTP_HOST: '',
-        SMTP_USER: '',
-        SMTP_PASSWORD: '',
-        EMAIL_SERVICE: '',
-        EMAIL_USER: '',
-        EMAIL_PASSWORD: '',
-      });
+    it('rejects incomplete SMTP configuration outside production when REQUIRE_PROD_EMAIL=true', () => {
+      const origRequire = process.env.REQUIRE_PROD_EMAIL;
+      process.env.REQUIRE_PROD_EMAIL = 'true';
+      try {
+        expect(() => {
+          resolveTransportConfig({
+            NODE_ENV: 'development',
+            SMTP_HOST: '',
+            SMTP_USER: '',
+            SMTP_PASSWORD: '',
+            EMAIL_SERVICE: '',
+            EMAIL_USER: '',
+            EMAIL_PASSWORD: '',
+          });
+        }).toThrow('Production email transport error');
+      } finally {
+        if (origRequire !== undefined) {
+          process.env.REQUIRE_PROD_EMAIL = origRequire;
+        } else {
+          delete process.env.REQUIRE_PROD_EMAIL;
+        }
+      }
+    });
 
-      expect(resolved.type).toBe('ethereal');
+    it('falls back to dev test account in non-production environments when credentials are absent', () => {
+      const origRequire = process.env.REQUIRE_PROD_EMAIL;
+      process.env.REQUIRE_PROD_EMAIL = 'false';
+      try {
+        const resolved = resolveTransportConfig({
+          NODE_ENV: 'development',
+          SMTP_HOST: '',
+          SMTP_USER: '',
+          SMTP_PASSWORD: '',
+          EMAIL_SERVICE: '',
+          EMAIL_USER: '',
+          EMAIL_PASSWORD: '',
+        });
+
+        expect(resolved.type).toBe('ethereal');
+      } finally {
+        if (origRequire !== undefined) {
+          process.env.REQUIRE_PROD_EMAIL = origRequire;
+        } else {
+          delete process.env.REQUIRE_PROD_EMAIL;
+        }
+      }
     });
   });
 

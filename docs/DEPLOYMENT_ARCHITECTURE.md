@@ -272,7 +272,7 @@
 ## 17. External Infrastructure Not Yet Provisioned
 
 1. **MongoDB Atlas Database Cluster**
-2. **Transactional SMTP Service (Resend / Brevo / SES)**
+2. **Transactional SMTP Service (Resend SMTP — smtp.resend.com:2465, sender domain alumniconnect.store [owner-stated verified; delivery unverified])**
 3. **Private Object Storage Bucket (Cloudflare R2 / AWS S3)**
 4. **Backend Application Compute Host (Render / Railway / DO / VPS)**
 5. **Frontend Static CDN Host (Cloudflare Pages / Vercel / Netlify)**

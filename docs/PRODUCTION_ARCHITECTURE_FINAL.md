@@ -108,15 +108,15 @@ For every component in the AlumniConnect ecosystem, the boundary between what is
 
 - **Transport Engine (`VERIFIED-REPO`):** Nodemailer configured via `backend/src/services/emailService.ts`.
 - **Required Production Variables (`VERIFIED-REPO`):**
-  - `SMTP_HOST`: Hostname of SMTP relay (e.g. `smtp.resend.com`, `smtp-relay.brevo.com`).
+  - `SMTP_HOST`: Hostname of SMTP relay (`smtp.resend.com`).
   - `SMTP_PORT`: `2465` (SSL — Render Free workaround), `465` (SSL), or `587` (STARTTLS).
   - `SMTP_SECURE`: `true` for port 2465 and 465, `false` for port 587.
-  - `SMTP_USER`: SMTP username or API key.
-  - `SMTP_PASSWORD`: SMTP secret key or password.
-  - `EMAIL_FROM`: Sender RFC 5322 header (e.g. `"AlumniConnect" <noreply@example.com>`).
+  - `SMTP_USER`: SMTP username (`resend`).
+  - `SMTP_PASSWORD`: SMTP secret key or API token (Resend API Key `re_...`).
+  - `EMAIL_FROM`: Sender RFC 5322 header (`"AlumniConnect <noreply@alumniconnect.store>"`).
 - **Link Dynamic Generation (`VERIFIED-REPO`):** Verification and password-reset links are dynamically constructed from `APP_BASE_URL` (`backend/src/services/emailService.ts:157, 261`).
 - **Logging Protection (`VERIFIED-REPO`):** Production logging omits raw verification tokens, reset tokens, and SMTP credentials (`backend/src/services/emailService.ts:251-253`).
-- **Provider Status:** `OWNER DECISION REQUIRED` (Resend vs Brevo vs AWS SES).
+- **Provider Status:** `RESOLVED (OWNER-STATED)`: Resend SMTP on port `2465` (`smtp.resend.com`). Sender domain `alumniconnect.store` confirmed verified by owner (not verified by repo; delivery not yet verified). The `onboarding@resend.dev` sandbox is retired.
 
 ---
 
@@ -138,9 +138,9 @@ For every component in the AlumniConnect ecosystem, the boundary between what is
 | `SMTP_HOST` | DEPLOY-TIME | **Yes** (Prod) | `smtp.resend.com` | Outgoing SMTP server hostname (`backend/src/config/env.ts:67`). |
 | `SMTP_PORT` | DEPLOY-TIME | **Yes** (Prod) | `2465` | Outgoing SMTP server port (`2465` SSL for Render Free, `465` SSL, or `587` STARTTLS) (`backend/src/config/env.ts:68`). |
 | `SMTP_SECURE` | DEPLOY-TIME | No | `true` | TLS mode (`true` for 2465/465, `false` for 587) (`backend/src/config/env.ts:69`). |
-| `SMTP_USER` | **SECRET** | **Yes** (Prod) | `smtp-user` | Outgoing SMTP username (`backend/src/config/env.ts:70`). |
-| `SMTP_PASSWORD` | **SECRET** | **Yes** (Prod) | `smtp-password` | Outgoing SMTP password (`backend/src/config/env.ts:71`). |
-| `EMAIL_FROM` | DEPLOY-TIME | No | `"AlumniConnect" <noreply@example.com>` | Outgoing sender header (`backend/src/config/env.ts:75`). |
+| `SMTP_USER` | **SECRET** | **Yes** (Prod) | `resend` | Outgoing SMTP username (`backend/src/config/env.ts:70`). |
+| `SMTP_PASSWORD` | **SECRET** | **Yes** (Prod) | `""` | Outgoing SMTP password (`backend/src/config/env.ts:71`). |
+| `EMAIL_FROM` | DEPLOY-TIME | No | `"AlumniConnect <noreply@alumniconnect.store>"` | Outgoing sender header (`backend/src/config/env.ts:75`). |
 | `FILE_STORAGE_DRIVER` | DEPLOY-TIME | No | `local` | Storage driver selector (`backend/src/config/env.ts:76`). |
 | `TRUST_PROXY` | DEPLOY-TIME | No | `false` | Reverse proxy hop count (`backend/src/config/env.ts:79`, `backend/src/app.ts:27-36`). |
 | `ADMIN_EMAIL` | DEPLOY-TIME | No (Seed only) | `admin@example.com` | Target email for admin bootstrap (`backend/src/seedAdmin.ts:30`). |
@@ -267,7 +267,7 @@ The table below tracks the status of all operational and infrastructure provider
 | **Backend Provider** | `OWNER DECISION REQUIRED` | Render Starter ($7/mo) / Railway Pro ($20/mo) / DigitalOcean App Platform ($5-$12/mo) / Self-Managed VPS ($4-$12/mo) |
 | **Database Tier** | `OWNER DECISION REQUIRED` | MongoDB Atlas Flex (Serverless) / MongoDB Atlas Dedicated M10 (~$57/mo, continuous PITR) / VPS MongoDB |
 | **Object Storage Provider** | `OWNER DECISION REQUIRED` | Cloudflare R2 (Zero egress, S3 API) / Amazon S3 Standard |
-| **Transactional Email Provider** | `OWNER DECISION REQUIRED` | Resend / Brevo / Amazon SES |
+| **Transactional Email Provider** | `RESOLVED (OWNER-STATED)` | Resend SMTP on port 2465 (`smtp.resend.com`, domain: `alumniconnect.store`) |
 | **DNS & Apex Domain** | `OWNER DECISION REQUIRED` | Institutional apex domain registration (e.g. `alumniconnect.edu`) & DNS management |
 | **Primary Cloud Region** | `OWNER DECISION REQUIRED` | Geographic colocation region (`us-east-1`, `eu-west-1`, `ap-south-1`, etc.) |
 | **Recovery Point Objective (RPO)**| `OWNER DECISION REQUIRED` | Maximum acceptable data loss window (e.g. RPO <= 1 hr via continuous PITR vs RPO <= 24 hrs) |
