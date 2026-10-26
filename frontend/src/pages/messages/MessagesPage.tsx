@@ -11,6 +11,7 @@ import { Modal } from '../../components/ui/Modal';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
+import { isOwnMessage } from '../../utils/messageOwnership';
 import {
   messagingService,
   ConversationItem,
@@ -179,7 +180,7 @@ export default function MessagesPage() {
         });
 
         // Mark as read immediately if user is viewing this thread
-        if (newMsg.recipient && (newMsg.recipient.id || newMsg.recipient._id) === currentUser?._id?.toString()) {
+        if (newMsg.recipient && isOwnMessage(newMsg.recipient, currentUser)) {
           markSocketRead(convId);
         }
       }
@@ -569,26 +570,29 @@ export default function MessagesPage() {
                     </div>
                   ) : (
                     messages.map((msg) => {
-                      const isSelf =
-                        (msg.sender?.id || msg.sender?._id || msg.sender)?.toString() ===
-                        currentUser?._id?.toString();
+                      const isSelf = isOwnMessage(msg.sender, currentUser);
+                      const senderDisplayName =
+                        msg.sender?.name ||
+                        (isSelf ? 'You' : activeConversation?.otherParticipant?.name) ||
+                        'Partner';
 
                       return (
                         <div
                           key={msg.id || msg._id}
-                          className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'}`}
+                          className={`flex flex-col min-w-0 ${isSelf ? 'items-end' : 'items-start'}`}
                         >
                           <div
-                            className={`max-w-md px-4 py-2.5 rounded-2xl text-xs leading-relaxed break-words shadow-xs ${
+                            className={`w-fit max-w-[85%] md:max-w-[75%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed break-words [overflow-wrap:anywhere] min-w-0 shadow-xs ${
                               isSelf
-                                ? 'bg-navy-900 text-white rounded-br-xs'
-                                : 'bg-white text-slate-900 border border-slate-200/80 rounded-bl-xs'
+                                ? 'bg-indigo-600 text-white rounded-br-xs'
+                                : 'bg-white text-slate-900 border border-slate-200/90 rounded-bl-xs'
                             }`}
                           >
-                            <p className="whitespace-pre-wrap">{msg.content}</p>
+                            <span className="sr-only">{isSelf ? 'You: ' : `${senderDisplayName}: `}</span>
+                            <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] min-w-0">{msg.content}</p>
                           </div>
 
-                          <div className="flex items-center gap-1.5 mt-1 text-[10px] text-slate-400 px-1">
+                          <div className={`flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 px-1 ${isSelf ? 'justify-end' : 'justify-start'}`}>
                             <span>
                               {new Date(msg.createdAt).toLocaleTimeString([], {
                                 hour: '2-digit',
@@ -599,13 +603,13 @@ export default function MessagesPage() {
                             {isSelf && (
                               <span>
                                 {msg.readAt ? (
-                                  <span className="text-blue-600 font-medium flex items-center gap-0.5" title={`Read at ${new Date(msg.readAt).toLocaleTimeString()}`}>
+                                  <span className="text-indigo-600 font-medium flex items-center gap-0.5" title={`Read at ${new Date(msg.readAt).toLocaleTimeString()}`}>
                                     <CheckCheck className="w-3 h-3" />
                                     Read
                                   </span>
                                 ) : (
                                   <span title="Delivered">
-                                    <Check className="w-3 h-3 text-slate-400" />
+                                    <Check className="w-3 h-3 text-slate-500" />
                                   </span>
                                 )}
                               </span>
