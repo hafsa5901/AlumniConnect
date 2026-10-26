@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Bell, LogOut, LayoutDashboard, User, Shield, ChevronDown } from 'lucide-react';
+import { Menu, Bell, LogOut, LayoutDashboard, User, Shield, ChevronDown, Megaphone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
@@ -16,6 +16,7 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { label: 'Home', href: '/' },
+    { label: 'Announcements', href: '/announcements' },
     { label: 'Alumni', href: '/alumni' },
     { label: 'Events', href: '/events' },
     { label: 'Jobs', href: '/jobs' },
@@ -35,6 +36,15 @@ export const Navbar: React.FC = () => {
       icon: <LayoutDashboard className="w-4 h-4" />,
       onClick: () => navigate(dashboardRoute),
     },
+    ...(user?.role === 'admin'
+      ? [
+          {
+            label: 'Manage Announcements',
+            icon: <Megaphone className="w-4 h-4" />,
+            onClick: () => navigate('/admin/announcements'),
+          },
+        ]
+      : []),
     {
       label: 'Account Status',
       icon: <Shield className="w-4 h-4" />,

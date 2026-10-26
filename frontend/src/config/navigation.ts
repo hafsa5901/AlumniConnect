@@ -11,6 +11,7 @@ import {
   UserCog,
   FileText,
   BarChart3,
+  Megaphone,
   LucideIcon,
 } from 'lucide-react';
 import { Role } from '../types';
@@ -25,6 +26,7 @@ export interface NavItemConfig {
 export const navigationConfig: Record<Role, NavItemConfig[]> = {
   student: [
     { label: 'Overview', href: '/dashboard/student', icon: LayoutDashboard },
+    { label: 'News & Announcements', href: '/announcements', icon: Megaphone },
     { label: 'My Network', href: '/network', icon: UserCheck },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
     { label: 'Events', href: '/events', icon: Calendar },
@@ -36,6 +38,7 @@ export const navigationConfig: Record<Role, NavItemConfig[]> = {
   ],
   alumni: [
     { label: 'Overview', href: '/dashboard/alumni', icon: LayoutDashboard },
+    { label: 'News & Announcements', href: '/announcements', icon: Megaphone },
     { label: 'My Network', href: '/network', icon: UserCheck },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
     { label: 'Events', href: '/events', icon: Calendar },
@@ -47,6 +50,8 @@ export const navigationConfig: Record<Role, NavItemConfig[]> = {
   ],
   admin: [
     { label: 'Overview', href: '/dashboard/admin', icon: LayoutDashboard },
+    { label: 'News & Announcements', href: '/announcements', icon: Megaphone },
+    { label: 'Manage Announcements', href: '/admin/announcements', icon: Megaphone },
     { label: 'My Network', href: '/network', icon: UserCheck },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
     { label: 'Verification Queue', href: '/admin/verification', icon: ShieldAlert },

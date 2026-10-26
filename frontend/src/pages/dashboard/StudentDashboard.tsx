@@ -10,6 +10,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { VerifiedBadge } from '../../components/ui/VerifiedBadge';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
+import { LatestAnnouncements } from '../../components/announcements/LatestAnnouncements';
 import {
   Sparkles,
   Users,
@@ -97,6 +98,9 @@ export default function StudentDashboard() {
               )}
             </div>
           </Card>
+
+          {/* Latest Campus Announcements */}
+          <LatestAnnouncements limit={3} />
 
           {/* Featured Alumni Mentors Preview */}
           <div className="space-y-4">

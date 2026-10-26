@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { CardSkeleton } from '../../components/feedback/Skeleton';
+import { LatestAnnouncements } from '../../components/announcements/LatestAnnouncements';
 import {
   Users,
   ShieldCheck,
@@ -135,6 +136,9 @@ export default function AdminDashboard() {
               </Card>
             </div>
           )}
+
+          {/* Latest Campus Announcements */}
+          <LatestAnnouncements limit={3} />
 
           {/* Department Breakdown & Audit Logs */}
           <div className="grid lg:grid-cols-3 gap-6">

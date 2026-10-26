@@ -21,6 +21,7 @@ import referralsRouter from './routes/referrals';
 import connectionsRouter from './routes/connections';
 import collegesRouter from './routes/colleges';
 import verificationRequestsRouter from './routes/verificationRequests';
+import announcementsRouter from './routes/announcements';
 
 const app = express();
 
@@ -107,6 +108,7 @@ app.use('/api/v1/referrals',             referralsRouter);
 app.use('/api/v1/connections',           connectionsRouter);
 app.use('/api/v1/colleges',              collegesRouter);
 app.use('/api/v1/verification-requests', verificationRequestsRouter);
+app.use('/api/v1/announcements',         announcementsRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

@@ -101,3 +101,73 @@ export interface ReferralRequestItem {
   updatedAt: string;
 }
 
+// ── Announcements & News Types ──────────────────────────────────────────────
+export const ANNOUNCEMENT_CATEGORIES = [
+  'General',
+  'Events',
+  'Placements',
+  'Internships',
+  'Workshops',
+  'Academic',
+  'Important',
+] as const;
+
+export type AnnouncementCategory = (typeof ANNOUNCEMENT_CATEGORIES)[number];
+
+export interface AnnouncementAuthor {
+  _id?: string;
+  id?: string;
+  name: string;
+  profilePhotoUrl?: string;
+}
+
+export interface AnnouncementItem {
+  id: string;
+  _id?: string;
+  title: string;
+  summary: string;
+  content?: string;
+  category: AnnouncementCategory;
+  coverImage?: string | null;
+  author: AnnouncementAuthor;
+  published: boolean;
+  publishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnnouncementPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AnnouncementListResponse {
+  announcements: AnnouncementItem[];
+  items: AnnouncementItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  pagination: AnnouncementPagination;
+}
+
+export interface CreateAnnouncementInput {
+  title: string;
+  summary: string;
+  content: string;
+  category: AnnouncementCategory;
+  coverImage?: string;
+  published?: boolean;
+}
+
+export interface UpdateAnnouncementInput {
+  title?: string;
+  summary?: string;
+  content?: string;
+  category?: AnnouncementCategory;
+  coverImage?: string | null;
+  published?: boolean;
+}
+

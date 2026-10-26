@@ -58,6 +58,12 @@ const MyNetworkPage          = lazy(() => import('./pages/network/MyNetworkPage'
 // Phase 5F: Operations Analytics & Bulk Governance
 const AdminAnalyticsPage     = lazy(() => import('./pages/admin/AdminAnalyticsPage'));
 
+// News & Announcements
+const AnnouncementsPage         = lazy(() => import('./pages/announcements/AnnouncementsPage'));
+const AnnouncementDetailPage    = lazy(() => import('./pages/announcements/AnnouncementDetailPage'));
+const AdminAnnouncementsPage    = lazy(() => import('./pages/admin/AdminAnnouncementsPage'));
+const AdminAnnouncementFormPage = lazy(() => import('./pages/admin/AdminAnnouncementFormPage'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -141,6 +147,24 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <EventDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* News & Announcements */}
+              <Route
+                path="/announcements"
+                element={
+                  <ProtectedRoute>
+                    <AnnouncementsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/announcements/:id"
+                element={
+                  <ProtectedRoute>
+                    <AnnouncementDetailPage />
                   </ProtectedRoute>
                 }
               />
@@ -261,6 +285,30 @@ export default function App() {
                 element={
                   <ProtectedRoute roles={['admin']}>
                     <AdminEventsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/announcements"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminAnnouncementsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/announcements/new"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminAnnouncementFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/announcements/:id/edit"
+                element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminAnnouncementFormPage />
                   </ProtectedRoute>
                 }
               />
